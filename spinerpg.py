@@ -417,7 +417,7 @@ piano_html = f"""
 
     <div class="piano-wrapper" id="pianoWrapper">
         <div class="piano" id="piano">
-            {''.join(white_html)}
+            {''.join(key_html)}
             {''.join(black_html)}
         </div>
     </div>
