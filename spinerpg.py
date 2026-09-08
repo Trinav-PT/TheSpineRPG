@@ -4,7 +4,7 @@ import time
 # --- PAGE CONFIG ---
 st.set_page_config(page_title="RPG Treasure Hunt Quest", page_icon="📜", layout="centered")
 
-# --- CUSTOM RPG STYLING ---
+# --- CUSTOM RPG & WORDLE STYLING ---
 st.markdown("""
     <style>
     .stApp {
@@ -31,9 +31,22 @@ st.markdown("""
         box-shadow: 0px 0px 15px rgba(197, 160, 89, 0.2);
         margin-bottom: 20px;
     }
-    .wordle-correct { background-color: #2e7d32; color: white; padding: 10px; font-weight: bold; border-radius: 5px; text-align: center; }
-    .wordle-present { background-color: #f9a825; color: white; padding: 10px; font-weight: bold; border-radius: 5px; text-align: center; }
-    .wordle-absent { background-color: #424242; color: white; padding: 10px; font-weight: bold; border-radius: 5px; text-align: center; }
+    .wordle-box {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 55px;
+        font-size: 24px;
+        font-weight: bold;
+        border-radius: 6px;
+        margin: 2px;
+        color: white;
+        text-transform: uppercase;
+    }
+    .tile-correct { background-color: #2e7d32; border: 2px solid #1b5e20; }
+    .tile-present { background-color: #f9a825; border: 2px solid #f57f17; }
+    .tile-absent { background-color: #37474f; border: 2px solid #263238; }
+    .tile-empty { background-color: #1a1815; border: 2px solid #4a3b2c; color: #4a3b2c; }
     </style>
 """, unsafe_allow_html=True)
 
@@ -52,49 +65,71 @@ st.title("🗡️ Quest of the Ancient Scrolls 🛡️")
 st.markdown("---")
 
 # ==========================================
-# PUZZLE 1: WORDLE
+# PUZZLE 1: WORDLE (3 TURNS, TARGET: SPINE)
 # ==========================================
 if st.session_state.stage == 1:
-    st.markdown("<div class='scroll-box'><h3>📜 Scroll I: The Sealed Word</h3><p>Guess the 5-letter ancient password to break the first spell. You have <b>3 attempts</b>!</p></div>", unsafe_allow_html=True)
+    st.markdown("""
+        <div class='scroll-box'>
+            <h3>📜 Scroll I: The Wordle Spell</h3>
+            <p>Guess the 5-letter ancient word to break the first seal. You have only <b>3 attempts</b>!</p>
+            <p>🟢 <b>Green</b>: Right letter, right spot.<br>
+               🟡 <b>Yellow</b>: Right letter, wrong spot.<br>
+               3️⃣ <b>Gray</b>: Letter not in word.</p>
+        </div>
+    """, unsafe_allow_html=True)
     
     target_word = "SPINE"
     max_turns = 3
-    
-    col1, col2 = st.columns([3, 1])
-    with col1:
-        guess = st.text_input("Enter 5-letter word:", max_chars=5, key="wordle_input").upper()
-    with col2:
-        st.write("")
-        st.write("")
-        submit_guess = st.button("Cast Spell")
 
-    if submit_guess and guess:
-        if len(guess) != 5:
-            st.warning("The spell requires exactly 5 letters!")
+    # Input form
+    with st.form(key="wordle_form", clear_on_submit=True):
+        col_in, col_btn = st.columns([3, 1])
+        with col_in:
+            guess_input = st.text_input("Enter 5-letter guess:", max_chars=5).strip().upper()
+        with col_btn:
+            st.write("")
+            st.write("")
+            submit_guess = st.form_submit_button("Submit Guess")
+
+    if submit_guess:
+        if len(guess_input) != 5 or not guess_input.isalpha():
+            st.warning("⚠️ Please enter a valid 5-letter word!")
         elif len(st.session_state.wordle_guesses) < max_turns:
-            st.session_state.wordle_guesses.append(guess)
+            st.session_state.wordle_guesses.append(guess_input)
 
-    # Display Guesses
-    for g in st.session_state.wordle_guesses:
+    # Render Wordle Grid (3 Rows x 5 Columns)
+    st.write("### 🧩 Wordle Grid")
+    for row_idx in range(max_turns):
         cols = st.columns(5)
-        for i in range(5):
-            char = g[i]
-            if char == target_word[i]:
-                cols[i].markdown(f"<div class='wordle-correct'>{char}</div>", unsafe_allow_html=True)
-            elif char in target_word:
-                cols[i].markdown(f"<div class='wordle-present'>{char}</div>", unsafe_allow_html=True)
-            else:
-                cols[i].markdown(f"<div class='wordle-absent'>{char}</div>", unsafe_allow_html=True)
-        st.write("")
+        
+        # If guess exists for this row
+        if row_idx < len(st.session_state.wordle_guesses):
+            current_guess = st.session_state.wordle_guesses[row_idx]
+            for col_idx in range(5):
+                char = current_guess[col_idx]
+                if char == target_word[col_idx]:
+                    tile_class = "tile-correct"
+                elif char in target_word:
+                    tile_class = "tile-present"
+                else:
+                    tile_class = "tile-absent"
+                cols[col_idx].markdown(f"<div class='wordle-box {tile_class}'>{char}</div>", unsafe_allow_html=True)
+        else:
+            # Empty row placeholder
+            for col_idx in range(5):
+                cols[col_idx].markdown("<div class='wordle-box tile-empty'>-</div>", unsafe_allow_html=True)
 
+    st.write("")
+
+    # Victory / Failure evaluation
     if len(st.session_state.wordle_guesses) > 0 and st.session_state.wordle_guesses[-1] == target_word:
         st.success("🎉 Correct! Scroll I unseals: *'Knowledge is the backbone of power.'*")
-        if st.button("Proceed to Next Puzzle ➡️"):
+        if st.button("Proceed to Scroll II ➡️"):
             st.session_state.stage = 2
             st.rerun()
     elif len(st.session_state.wordle_guesses) >= max_turns:
-        st.error("The magic failed! You ran out of turns.")
-        if st.button("Retry Scroll I"):
+        st.error(f"💥 The spell shattered! You used all {max_turns} attempts.")
+        if st.button("Retry Scroll I 🔄"):
             st.session_state.wordle_guesses = []
             st.rerun()
 
@@ -135,7 +170,7 @@ elif st.session_state.stage == 2:
             st.error("Some answers are incorrect. Check your spelling and try again!")
 
     if st.session_state.get('cw_passed', False):
-        if st.button("Proceed to Final Puzzle ➡️"):
+        if st.button("Proceed to Scroll III ➡️"):
             st.session_state.stage = 3
             st.rerun()
 
