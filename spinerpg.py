@@ -79,8 +79,8 @@ melody_sequence = [
 
 st.markdown("""
 <div class="scroll-box">
-    <h3>Scroll III: The Bard's Melody</h3>
-    <p>Play the ballad of the murder as your final challenge!</p>
+    <h3>Puzzle III: The Melody</h3>
+    <p>Play the secret melody of the ballad as your final challenge!</p>
     <p>
         Play the sequence using the <b>letter keys A–Y</b>
         or click the piano keys. The piano covers every note from
@@ -595,7 +595,7 @@ body {{
             <br>
 
             <small>
-                Master the Bard's Melody to unlock it.
+                Master the secret Melody to unlock it.
             </small>
 
         </div>
