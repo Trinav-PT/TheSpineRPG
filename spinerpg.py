@@ -1004,7 +1004,7 @@ function activateKeyboard() {{
     document.getElementById(
         "activation"
     ).textContent =
-        "Keyboard active — use A–Y to play the piano.";
+        "Keyboard active : use A–Y to play the piano.";
 
 }}
 
