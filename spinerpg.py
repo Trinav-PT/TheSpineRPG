@@ -618,7 +618,7 @@ body {{
             <input
                 id="playerName"
                 type="text"
-                value="Brave Bard"
+                value="Chewie"
                 maxlength="50"
             >
 
