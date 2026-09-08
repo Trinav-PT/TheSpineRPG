@@ -1117,16 +1117,11 @@ function generateLetter() {{
                   LITERATURE CLUB
 =======================================================
 
-Be it known to all realm inhabitants that:
 
                     ${{playerName.toUpperCase()}}
 
-Has successfully cleared the third and final trial with
-complete flawless perfection.
-
-Welcome to the ranks of The Spine - Literature Club!
-
-Given on this day in the RPG Realm.
+Who has successfully cleared all trials and proven 
+themselves worthy!
 =======================================================
 `;
 
