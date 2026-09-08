@@ -5,8 +5,7 @@ import streamlit.components.v1 as components
 # PAGE CONFIG
 # ============================================================
 st.set_page_config(
-    page_title="RPG Piano Quest",
-    page_icon="🎹",
+    page_title="SPINE Chronicles",
     layout="wide"
 )
 
@@ -65,7 +64,7 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-st.title("🗡️ Scroll of the Bard's Piano 🛡️")
+st.title("SPINE Chronicles")
 st.markdown("---")
 
 # ============================================================
@@ -80,9 +79,10 @@ melody_sequence = [
 
 st.markdown("""
 <div class="scroll-box">
-    <h3>📜 Scroll III: The Bard's Melody</h3>
+    <h3>Scroll III: The Bard's Melody</h3>
+    <p>Play the ballad of the murder as your final challenge!</p>
     <p>
-        Play the ancient sequence using the <b>letter keys A–Y</b>
+        Play the sequence using the <b>letter keys A–Y</b>
         or click the piano keys. The piano covers every note from
         <b>C#2 to C#4</b>.
     </p>
@@ -91,7 +91,7 @@ st.markdown("""
         computer-keyboard controls.
     </p>
     <p>
-        ⚠️ <b>Beware:</b> If you play even one wrong note,
+        <b>Beware:</b> If you play even one wrong note,
         the sequence will restart from the beginning.
     </p>
 </div>
@@ -574,7 +574,7 @@ body {{
     <div id="sequence">
 
         <div class="sequence-title">
-            🎶 Notes to Play
+            Notes to Play
         </div>
 
         <div id="targetSequence"></div>
@@ -590,7 +590,7 @@ body {{
 
         <div id="letterLockedMessage">
 
-            🔒 The Acceptance Letter is sealed.
+            The Acceptance Letter is sealed.
 
             <br>
 
@@ -604,12 +604,11 @@ body {{
         <div id="letterContent" style="display:none;">
 
             <div class="letter-title">
-                ✨ THE GRAND ACCEPTANCE LETTER ✨
+                THE GRAND ACCEPTANCE LETTER
             </div>
 
             <p>
-                You have mastered the Bard's Piano and
-                harmonized the ancient notes!
+                You have successfully cleared the third and final trial
             </p>
 
             <label for="playerName">
@@ -624,7 +623,7 @@ body {{
             >
 
             <button id="downloadLetter">
-                📜 Download Acceptance Letter
+                Download Acceptance Letter
             </button>
 
             <pre id="letterPreview"></pre>
@@ -873,7 +872,7 @@ function handleNotePlay(note, freq, element) {{
             document.getElementById("feedback").innerHTML =
 
                 '<span class="success">' +
-                '🎉 FLAWLESS! Challenge passed!' +
+                'FLAWLESS! Challenge passed!' +
                 '</span>';
 
 
@@ -923,7 +922,7 @@ function handleNotePlay(note, freq, element) {{
             document.getElementById(
                 "feedback"
             ).textContent =
-                "✓ Correct — keep going!";
+                "Correct — keep going!";
 
         }}
 
@@ -935,12 +934,6 @@ function handleNotePlay(note, freq, element) {{
        ======================================================== */
 
     else {{
-
-        /*
-         * The important part:
-         *
-         * Completely erase the current attempt.
-         */
 
         playedSequence = [];
 
@@ -959,7 +952,7 @@ function handleNotePlay(note, freq, element) {{
         ).innerHTML =
 
             '<span class="error">' +
-            '❌ Wrong note! The sequence has ' +
+            'Wrong note! The sequence has ' +
             'restarted from the beginning.' +
             '</span>';
 
@@ -1011,7 +1004,7 @@ function activateKeyboard() {{
     document.getElementById(
         "activation"
     ).textContent =
-        "⌨️ Keyboard active — use A–Y to play the piano.";
+        "Keyboard active — use A–Y to play the piano.";
 
 }}
 
@@ -1127,8 +1120,6 @@ document.addEventListener(
             return;
 
 
-        /* Don't repeat notes when holding key */
-
         if (event.repeat)
             return;
 
@@ -1167,18 +1158,18 @@ function generateLetter() {{
 
     return `
 =======================================================
-           HEROIC ACADEMY ACCEPTANCE LETTER
+          WELCOME TO THE RANKS OF THE SPINE
+                  LITERATURE CLUB
 =======================================================
 
 Be it known to all realm inhabitants that:
 
-                   ${{playerName.toUpperCase()}}
+                    ${{playerName.toUpperCase()}}
 
-Has successfully harmonized the Bard's Piano with complete
-flawless perfection.
+Has successfully cleared the third and final trial with
+complete flawless perfection.
 
-You are officially ACCEPTED into the High Order of
-Master Musicians & Adventurers with full honors!
+Welcome to the ranks of The Spine - Literature Club!
 
 Given on this day in the RPG Realm.
 =======================================================
@@ -1222,11 +1213,6 @@ document
     .addEventListener(
         "click",
         () => {{
-
-            /*
-             * This button only becomes visible after
-             * successfully completing the melody.
-             */
 
             const letter =
                 generateLetter();
