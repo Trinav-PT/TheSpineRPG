@@ -1040,51 +1040,6 @@ document
 
         }};
 
-
-        /* ================================================
-           MOUSE
-           ================================================ */
-
-        el.addEventListener(
-            "mousedown",
-            (event) => {{
-
-                event.preventDefault();
-
-                activateKeyboard();
-
-                handleNotePlay(
-                    note,
-                    freq,
-                    el
-                );
-
-            }}
-        );
-
-
-        /* ================================================
-           TOUCH
-           ================================================ */
-
-        el.addEventListener(
-            "touchstart",
-            (event) => {{
-
-                event.preventDefault();
-
-                activateKeyboard();
-
-                handleNotePlay(
-                    note,
-                    freq,
-                    el
-                );
-
-            }},
-            {{passive: false}}
-        );
-
     }});
 
 
