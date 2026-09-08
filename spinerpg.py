@@ -1,17 +1,11 @@
 import streamlit as st
 import streamlit.components.v1 as components
 
-# ============================================================
-# PAGE CONFIG
-# ============================================================
 st.set_page_config(
     page_title="SPINE Chronicles",
     layout="wide"
 )
 
-# ============================================================
-# STYLING
-# ============================================================
 st.markdown("""
 <style>
 .stApp {
@@ -67,9 +61,6 @@ st.markdown("""
 st.title("SPINE Chronicles")
 st.markdown("---")
 
-# ============================================================
-# TARGET MELODY
-# ============================================================
 melody_sequence = [
     "G#3", "A3", "C#4", "C#3",
     "E3", "D#3", "C#3", "C3",
@@ -97,10 +88,6 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
-# ============================================================
-# FULL CHROMATIC RANGE: C#2 -> C#4
-# 25 notes, mapped to A-Y
-# ============================================================
 notes = [
     ("C#2", 69.30),
     ("D2", 73.42),
@@ -131,9 +118,6 @@ notes = [
 
 keyboard_letters = list("abcdefghijklmnopqrstuvwxy")
 
-# ============================================================
-# BUILD PIANO HTML
-# ============================================================
 white_notes = {"C", "D", "E", "F", "G", "A", "B"}
 
 piano_keys = []
@@ -166,9 +150,6 @@ for note, freq in notes:
 
         white_index += 1
 
-# ============================================================
-# GENERATE WHITE KEYS
-# ============================================================
 white_counter = 0
 key_html = []
 
@@ -193,9 +174,6 @@ for i, (note, freq) in enumerate(notes):
 
         white_counter += 1
 
-# ============================================================
-# GENERATE BLACK KEYS
-# ============================================================
 white_counter = 0
 black_html = []
 
@@ -223,9 +201,6 @@ for i, (note, freq) in enumerate(notes):
     else:
         white_counter += 1
 
-# ============================================================
-# COMPLETE PIANO HTML
-# ============================================================
 piano_html = f"""
 <!DOCTYPE html>
 <html>
@@ -261,10 +236,6 @@ body {{
     outline: none;
 }}
 
-/* ============================================================
-   STATUS
-   ============================================================ */
-
 #status {{
     background: #2b261f;
     border: 1px solid #c5a059;
@@ -294,10 +265,6 @@ body {{
 .error {{
     color: #e57373;
 }}
-
-/* ============================================================
-   PIANO
-   ============================================================ */
 
 .piano-wrapper {{
     position: relative;
@@ -395,10 +362,6 @@ body {{
     background: #8b5a2b;
 }}
 
-/* ============================================================
-   SEQUENCE
-   ============================================================ */
-
 #sequence {{
     min-width: 1250px;
     margin-top: 18px;
@@ -442,10 +405,6 @@ body {{
     background: #8b3a3a;
     color: white;
 }}
-
-/* ============================================================
-   ACCEPTANCE LETTER
-   ============================================================ */
 
 #acceptanceLetter {{
     min-width: 1250px;
@@ -528,10 +487,6 @@ body {{
 
 <div id="app" tabindex="0">
 
-    <!-- ====================================================
-         STATUS
-         ==================================================== -->
-
     <div id="status">
 
         <div>
@@ -549,11 +504,6 @@ body {{
 
     </div>
 
-
-    <!-- ====================================================
-         PIANO
-         ==================================================== -->
-
     <div class="piano-wrapper" id="pianoWrapper">
 
         <div class="piano" id="piano">
@@ -566,11 +516,6 @@ body {{
 
     </div>
 
-
-    <!-- ====================================================
-         TARGET SEQUENCE
-         ==================================================== -->
-
     <div id="sequence">
 
         <div class="sequence-title">
@@ -580,11 +525,6 @@ body {{
         <div id="targetSequence"></div>
 
     </div>
-
-
-    <!-- ====================================================
-         ACCEPTANCE LETTER
-         ==================================================== -->
 
     <div id="acceptanceLetter" class="locked">
 
@@ -599,7 +539,6 @@ body {{
             </small>
 
         </div>
-
 
         <div id="letterContent" style="display:none;">
 
@@ -634,7 +573,6 @@ body {{
 
 </div>
 
-
 <script>
 
 const melody = {melody_sequence!r};
@@ -647,10 +585,6 @@ let playedSequence = [];
 let audioCtx = null;
 
 let activeOscillators = {{}};
-
-/* ============================================================
-   AUDIO
-   ============================================================ */
 
 function initAudio() {{
 
@@ -669,11 +603,6 @@ function initAudio() {{
     }}
 
 }}
-
-
-/* ============================================================
-   PLAY TONE
-   ============================================================ */
 
 function playTone(freq, id) {{
 
@@ -725,11 +654,6 @@ function playTone(freq, id) {{
 
 }}
 
-
-/* ============================================================
-   TARGET SEQUENCE DISPLAY
-   ============================================================ */
-
 function renderTargetSequence() {{
 
     const container =
@@ -755,11 +679,6 @@ function renderTargetSequence() {{
     updateTargetHighlight();
 
 }}
-
-
-/* ============================================================
-   TARGET HIGHLIGHT
-   ============================================================ */
 
 function updateTargetHighlight() {{
 
@@ -792,11 +711,6 @@ function updateTargetHighlight() {{
 
 }}
 
-
-/* ============================================================
-   FLASH KEY
-   ============================================================ */
-
 function flashKey(el) {{
 
     el.classList.add("active");
@@ -808,11 +722,6 @@ function flashKey(el) {{
     }}, 130);
 
 }}
-
-
-/* ============================================================
-   PLAYED NOTES DISPLAY
-   ============================================================ */
 
 function updatePlayedDisplay() {{
 
@@ -826,11 +735,6 @@ function updatePlayedDisplay() {{
 
 }}
 
-
-/* ============================================================
-   HANDLE NOTE
-   ============================================================ */
-
 function handleNotePlay(note, freq, element) {{
 
     initAudio();
@@ -842,14 +746,8 @@ function handleNotePlay(note, freq, element) {{
         note + Date.now()
     );
 
-
     const expected =
         melody[playedSequence.length];
-
-
-    /* ========================================================
-       CORRECT NOTE
-       ======================================================== */
 
     if (note === expected) {{
 
@@ -858,11 +756,6 @@ function handleNotePlay(note, freq, element) {{
         updatePlayedDisplay();
 
         updateTargetHighlight();
-
-
-        /* ====================================================
-           CHALLENGE COMPLETE
-           ==================================================== */
 
         if (
             playedSequence.length ===
@@ -875,11 +768,6 @@ function handleNotePlay(note, freq, element) {{
                 'FLAWLESS! Challenge passed!' +
                 '</span>';
 
-
-            /* ================================================
-               UNLOCK ACCEPTANCE LETTER
-               ================================================ */
-
             const letter =
                 document.getElementById(
                     "acceptanceLetter"
@@ -889,23 +777,15 @@ function handleNotePlay(note, freq, element) {{
 
             letter.classList.add("unlocked");
 
-
             document.getElementById(
                 "letterLockedMessage"
             ).style.display = "none";
-
 
             document.getElementById(
                 "letterContent"
             ).style.display = "block";
 
-
             updateLetterPreview();
-
-
-            /* ================================================
-               INFORM STREAMLIT
-               ================================================ */
 
             window.parent.postMessage(
                 {{
@@ -913,7 +793,6 @@ function handleNotePlay(note, freq, element) {{
                 }},
                 "*"
             );
-
 
         }}
 
@@ -928,24 +807,13 @@ function handleNotePlay(note, freq, element) {{
 
     }}
 
-
-    /* ========================================================
-       WRONG NOTE
-       ======================================================== */
-
     else {{
 
         playedSequence = [];
 
-
         updatePlayedDisplay();
 
         updateTargetHighlight();
-
-
-        /* ================================================
-           Show error
-           ================================================ */
 
         document.getElementById(
             "feedback"
@@ -956,24 +824,13 @@ function handleNotePlay(note, freq, element) {{
             'restarted from the beginning.' +
             '</span>';
 
-
-        /* ================================================
-           Flash wrong piano key
-           ================================================ */
-
         element.classList.add("wrong");
-
 
         setTimeout(() => {{
 
             element.classList.remove("wrong");
 
         }}, 500);
-
-
-        /* ================================================
-           Reset message
-           ================================================ */
 
         setTimeout(() => {{
 
@@ -990,11 +847,6 @@ function handleNotePlay(note, freq, element) {{
 
 }}
 
-
-/* ============================================================
-   ACTIVATE KEYBOARD
-   ============================================================ */
-
 function activateKeyboard() {{
 
     document.body.focus();
@@ -1007,11 +859,6 @@ function activateKeyboard() {{
         "Keyboard active : use A–Y to play the piano.";
 
 }}
-
-
-/* ============================================================
-   BUILD KEY MAP
-   ============================================================ */
 
 document
     .querySelectorAll(".piano-key")
@@ -1026,9 +873,7 @@ document
         const key =
             el.dataset.key.toLowerCase();
 
-
         noteElements[note] = el;
-
 
         keyMap[key] = {{
 
@@ -1042,11 +887,6 @@ document
 
     }});
 
-
-/* ============================================================
-   PIANO CLICK ACTIVATES KEYBOARD
-   ============================================================ */
-
 document
     .getElementById("pianoWrapper")
     .addEventListener(
@@ -1058,11 +898,6 @@ document
         }}
     );
 
-
-/* ============================================================
-   COMPUTER KEYBOARD
-   ============================================================ */
-
 document.addEventListener(
     "keydown",
     (event) => {{
@@ -1070,23 +905,18 @@ document.addEventListener(
         const key =
             event.key.toLowerCase();
 
-
         if (!keyMap[key])
             return;
 
-
         if (event.repeat)
             return;
-
 
         event.preventDefault();
 
         activateKeyboard();
 
-
         const item =
             keyMap[key];
-
 
         handleNotePlay(
             item.note,
@@ -1097,11 +927,6 @@ document.addEventListener(
     }}
 );
 
-
-/* ============================================================
-   ACCEPTANCE LETTER
-   ============================================================ */
-
 function generateLetter() {{
 
     const playerName =
@@ -1109,7 +934,6 @@ function generateLetter() {{
             .getElementById("playerName")
             .value
             .trim() || "Brave Bard";
-
 
     return `
 =======================================================
@@ -1127,11 +951,6 @@ themselves worthy!
 
 }}
 
-
-/* ============================================================
-   LETTER PREVIEW
-   ============================================================ */
-
 function updateLetterPreview() {{
 
     document.getElementById(
@@ -1141,22 +960,12 @@ function updateLetterPreview() {{
 
 }}
 
-
-/* ============================================================
-   NAME FIELD
-   ============================================================ */
-
 document
     .getElementById("playerName")
     .addEventListener(
         "input",
         updateLetterPreview
     );
-
-
-/* ============================================================
-   DOWNLOAD ACCEPTANCE LETTER
-   ============================================================ */
 
 document
     .getElementById("downloadLetter")
@@ -1167,13 +976,11 @@ document
             const letter =
                 generateLetter();
 
-
             const playerName =
                 document
                     .getElementById("playerName")
                     .value
                     .trim() || "Brave Bard";
-
 
             const blob =
                 new Blob(
@@ -1183,17 +990,13 @@ document
                     }}
                 );
 
-
             const url =
                 URL.createObjectURL(blob);
-
 
             const link =
                 document.createElement("a");
 
-
             link.href = url;
-
 
             link.download =
                 "Acceptance_Letter_" +
@@ -1203,29 +1006,20 @@ document
                 ) +
                 ".txt";
 
-
             document
                 .body
                 .appendChild(link);
 
-
             link.click();
-
 
             document
                 .body
                 .removeChild(link);
 
-
             URL.revokeObjectURL(url);
 
         }}
     );
-
-
-/* ============================================================
-   INITIALIZE
-   ============================================================ */
 
 renderTargetSequence();
 
@@ -1240,9 +1034,6 @@ activateKeyboard();
 </html>
 """
 
-# ============================================================
-# DISPLAY GAME
-# ============================================================
 components.html(
     piano_html,
     height=700,
