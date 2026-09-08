@@ -1,27 +1,16 @@
 import streamlit as st
-import time
+import streamlit.components.v1 as components
 
 # --- PAGE CONFIG ---
-st.set_page_config(page_title="RPG Treasure Hunt Quest", page_icon="📜", layout="centered")
+st.set_page_config(page_title="RPG Piano Quest", page_icon="🎹", layout="centered")
 
-# --- CUSTOM RPG, WORDLE & CROSSWORD STYLING ---
+# --- CUSTOM RPG STYLING ---
 st.markdown("""
     <style>
     .stApp {
         background-color: #1a1815;
         color: #e0d5c1;
         font-family: 'Georgia', serif;
-    }
-    .stButton>button {
-        background-color: #4a3b2c;
-        color: #f3e5ab;
-        border: 2px solid #8b5a2b;
-        border-radius: 8px;
-        font-weight: bold;
-    }
-    .stButton>button:hover {
-        background-color: #8b5a2b;
-        color: #ffffff;
     }
     .scroll-box {
         background-color: #2b261f;
@@ -31,322 +20,249 @@ st.markdown("""
         box-shadow: 0px 0px 15px rgba(197, 160, 89, 0.2);
         margin-bottom: 20px;
     }
-    /* Wordle Styling */
-    .wordle-box {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        height: 55px;
-        font-size: 24px;
-        font-weight: bold;
-        border-radius: 6px;
-        margin: 2px;
-        color: white;
-        text-transform: uppercase;
-    }
-    .tile-correct { background-color: #2e7d32; border: 2px solid #1b5e20; }
-    .tile-present { background-color: #f9a825; border: 2px solid #f57f17; }
-    .tile-absent { background-color: #37474f; border: 2px solid #263238; }
-    .tile-empty { background-color: #1a1815; border: 2px solid #4a3b2c; color: #4a3b2c; }
-
-    /* Crossword Grid Styling */
-    .cw-cell {
-        width: 32px;
-        height: 32px;
-        border: 1px solid #8b5a2b;
-        background-color: #2b261f;
-        color: #f3e5ab;
-        text-align: center;
-        font-weight: bold;
-        font-size: 16px;
-        position: relative;
-        display: inline-block;
-        line-height: 30px;
-        vertical-align: middle;
-        margin: 1px;
-    }
-    .cw-block {
-        width: 32px;
-        height: 32px;
-        background-color: #12100e;
-        border: 1px solid #1a1815;
-        display: inline-block;
-        margin: 1px;
-        vertical-align: middle;
-    }
-    .cw-num {
-        position: absolute;
-        top: 1px;
-        left: 2px;
-        font-size: 9px;
-        color: #c5a059;
-        line-height: 1;
-    }
-    .cw-row {
-        white-space: nowrap;
-        height: 35px;
-    }
     </style>
 """, unsafe_allow_html=True)
 
-# --- SESSION STATE INITIALIZATION ---
-if 'stage' not in st.session_state:
-    st.session_state.stage = 1
-if 'wordle_guesses' not in st.session_state:
-    st.session_state.wordle_guesses = []
-if 'piano_sequence' not in st.session_state:
-    st.session_state.piano_sequence = []
-if 'piano_start_time' not in st.session_state:
-    st.session_state.piano_start_time = None
-
 # --- HEADER ---
-st.title("🗡️ Quest of the Ancient Scrolls 🛡️")
+st.title("🗡️ Scroll of the Bard's Piano 🛡️")
 st.markdown("---")
 
 # ==========================================
-# PUZZLE 1: WORDLE (3 TURNS, TARGET: SPINE)
+# PIANO GAME COMPONENT WITH WEB AUDIO API
 # ==========================================
-if st.session_state.stage == 1:
-    st.markdown("""
-        <div class='scroll-box'>
-            <h3>📜 Scroll I: The Wordle Spell</h3>
-            <p>Guess the 5-letter ancient word to break the first seal. You have only <b>3 attempts</b>!</p>
-            <p>🟢 <b>Green</b>: Right letter, right spot.<br>
-               🟡 <b>Yellow</b>: Right letter, wrong spot.<br>
-               3️⃣ <b>Gray</b>: Letter not in word.</p>
-        </div>
-    """, unsafe_allow_html=True)
-    
-    target_word = "SPINE"
-    max_turns = 3
 
-    # Input form
-    with st.form(key="wordle_form", clear_on_submit=True):
-        col_in, col_btn = st.columns([3, 1])
-        with col_in:
-            guess_input = st.text_input("Enter 5-letter guess:", max_chars=5).strip().upper()
-        with col_btn:
-            st.write("")
-            st.write("")
-            submit_guess = st.form_submit_button("Submit Guess")
+# Target Melody
+melody_sequence = [
+    "3rdG#", "3rdA", "4thC#", "3rdC#", "3rdE", "3rdD#", "3rdC#", "3rdC",
+    "2ndG#", "2ndA", "2ndA#", "2ndB", "3rdC", "3rdC#", "3rdE", "3rdF"
+]
 
-    if submit_guess:
-        if len(guess_input) != 5 or not guess_input.isalpha():
-            st.warning("⚠️ Please enter a valid 5-letter word!")
-        elif len(st.session_state.wordle_guesses) < max_turns:
-            st.session_state.wordle_guesses.append(guess_input)
+st.markdown("""
+    <div class='scroll-box'>
+        <h3>📜 Scroll III: The Bard's Melody</h3>
+        <p>Play the ancient sequence on your computer keyboard or click the keys below. Hit <b>no wrong notes</b>!</p>
+    </div>
+""", unsafe_allow_html=True)
 
-    # Render Wordle Grid (3 Rows x 5 Columns)
-    st.write("### 🧩 Wordle Grid")
-    for row_idx in range(max_turns):
-        cols = st.columns(5)
-        
-        # If guess exists for this row
-        if row_idx < len(st.session_state.wordle_guesses):
-            current_guess = st.session_state.wordle_guesses[row_idx]
-            for col_idx in range(5):
-                char = current_guess[col_idx]
-                if char == target_word[col_idx]:
-                    tile_class = "tile-correct"
-                elif char in target_word:
-                    tile_class = "tile-present"
-                else:
-                    tile_class = "tile-absent"
-                cols[col_idx].markdown(f"<div class='wordle-box {tile_class}'>{char}</div>", unsafe_allow_html=True)
-        else:
-            # Empty row placeholder
-            for col_idx in range(5):
-                cols[col_idx].markdown("<div class='wordle-box tile-empty'>-</div>", unsafe_allow_html=True)
+st.write("### 🎶 Target Sequence to Play:")
+st.code(" ➔ ".join(melody_sequence))
 
-    st.write("")
+# Custom HTML/JS Web Audio Piano Component
+piano_html = """
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+    body {
+        background-color: #1a1815;
+        color: #e0d5c1;
+        font-family: 'Georgia', serif;
+        margin: 0;
+        padding: 10px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+    .status-box {
+        background-color: #2b261f;
+        border: 1px solid #c5a059;
+        border-radius: 6px;
+        padding: 10px;
+        width: 90%;
+        margin-bottom: 15px;
+        font-size: 14px;
+        text-align: center;
+    }
+    .piano-container {
+        display: flex;
+        position: relative;
+        background: #000;
+        padding: 10px 10px 0 10px;
+        border-radius: 8px;
+        box-shadow: 0 10px 20px rgba(0,0,0,0.8);
+        user-select: none;
+    }
+    .key {
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-end;
+        align-items: center;
+        border-radius: 0 0 5px 5px;
+        cursor: pointer;
+        font-size: 11px;
+        font-weight: bold;
+        padding-bottom: 8px;
+        box-sizing: border-box;
+    }
+    .white {
+        width: 42px;
+        height: 180px;
+        background: linear-gradient(to bottom, #eeeeee 0%, #ffffff 100%);
+        color: #333;
+        border: 1px solid #000;
+        z-index: 1;
+    }
+    .white:active, .white.active {
+        background: #d3d3d3;
+    }
+    .black {
+        width: 28px;
+        height: 110px;
+        background: linear-gradient(to bottom, #333333 0%, #000000 100%);
+        color: #f3e5ab;
+        border: 1px solid #000;
+        margin-left: -14px;
+        margin-right: -14px;
+        z-index: 2;
+    }
+    .black:active, .black.active {
+        background: #555555;
+    }
+    .key-cap {
+        background: #8b5a2b;
+        color: #fff;
+        padding: 2px 4px;
+        border-radius: 3px;
+        margin-top: 4px;
+        font-size: 10px;
+    }
+    .msg-success { color: #81c784; font-weight: bold; }
+    .msg-error { color: #e57373; font-weight: bold; }
+</style>
+</head>
+<body>
 
-    # Victory / Failure evaluation
-    if len(st.session_state.wordle_guesses) > 0 and st.session_state.wordle_guesses[-1] == target_word:
-        st.success("🎉 Correct! Scroll I unseals: *'Knowledge is the backbone of power.'*")
-        if st.button("Proceed to Scroll II ➡️"):
-            st.session_state.stage = 2
-            st.rerun()
-    elif len(st.session_state.wordle_guesses) >= max_turns:
-        st.error(f"💥 The spell shattered! You used all {max_turns} attempts.")
-        if st.button("Retry Scroll I 🔄"):
-            st.session_state.wordle_guesses = []
-            st.rerun()
+<div class="status-box" id="statusBox">
+    <div><b>Notes Played:</b> <span id="playedNotes" style="color:#f3e5ab;">None</span></div>
+    <div id="feedbackMsg" style="margin-top: 5px;">Click a key or press keyboard shortcuts to start!</div>
+</div>
 
-# ==========================================
-# PUZZLE 2: CROSSWORD WITH VISUAL GRID
-# ==========================================
-elif st.session_state.stage == 2:
-    st.markdown("<div class='scroll-box'><h3>📜 Scroll II: The Lexicon Grid</h3><p>Fill in the answers below to complete the Ancient Crossword grid!</p></div>", unsafe_allow_html=True)
-    
-    st.markdown("""
-    **Clues:**
-    * **1 Across:** Written works of artistic value (10 letters)
-    * **2 Across:** Written work bound together (4 letters)
-    * **3 Down:** Look at and comprehend written text (4 letters)
-    * **4 Across:** Mark letters or words on paper (5 letters)
-    * **5 Down:** Tool used for writing/drawing (6 letters)
-    * **6 Across:** Taxonomic rank below Kingdom (6 letters)
-    * **7 Across:** Vertebrates belong to this phylum (8 letters)
-    """)
+<div class="piano-container" id="keyboard">
+    <!-- Keys mapped across 2 octaves -->
+    <div class="key black" data-note="2ndG#" data-freq="207.65" data-key="a"><span class="key-note">2ndG#</span><span class="key-cap">A</span></div>
+    <div class="key white" data-note="2ndA" data-freq="220.00" data-key="w"><span class="key-note">2ndA</span><span class="key-cap">W</span></div>
+    <div class="key black" data-note="2ndA#" data-freq="233.08" data-key="s"><span class="key-note">2ndA#</span><span class="key-cap">S</span></div>
+    <div class="key white" data-note="2ndB" data-freq="246.94" data-key="e"><span class="key-note">2ndB</span><span class="key-cap">E</span></div>
+    <div class="key white" data-note="3rdC" data-freq="261.63" data-key="d"><span class="key-note">3rdC</span><span class="key-cap">D</span></div>
+    <div class="key black" data-note="3rdC#" data-freq="277.18" data-key="f"><span class="key-note">3rdC#</span><span class="key-cap">F</span></div>
+    <div class="key white" data-note="3rdD#" data-freq="311.13" data-key="t"><span class="key-note">3rdD#</span><span class="key-cap">T</span></div>
+    <div class="key white" data-note="3rdE" data-freq="329.63" data-key="g"><span class="key-note">3rdE</span><span class="key-cap">G</span></div>
+    <div class="key white" data-note="3rdF" data-freq="349.23" data-key="y"><span class="key-note">3rdF</span><span class="key-cap">Y</span></div>
+    <div class="key black" data-note="3rdG#" data-freq="415.30" data-key="h"><span class="key-note">3rdG#</span><span class="key-cap">H</span></div>
+    <div class="key white" data-note="3rdA" data-freq="440.00" data-key="u"><span class="key-note">3rdA</span><span class="key-cap">U</span></div>
+    <div class="key black" data-note="4thC#" data-freq="554.37" data-key="j"><span class="key-note">4thC#</span><span class="key-cap">J</span></div>
+</div>
 
-    c1, c2 = st.columns(2)
-    with c1:
-        ans1 = st.text_input("1. Across:", key="cw1").strip().upper()
-        ans2 = st.text_input("2. Across:", key="cw2").strip().upper()
-        ans3 = st.text_input("3. Down:", key="cw3").strip().upper()
-        ans4 = st.text_input("4. Across:", key="cw4").strip().upper()
-    with c2:
-        ans5 = st.text_input("5. Down:", key="cw5").strip().upper()
-        ans6 = st.text_input("6. Across:", key="cw6").strip().upper()
-        ans7 = st.text_input("7. Across:", key="cw7").strip().upper()
-
-    # Build 10x12 Visual Grid Layout
-    grid = [[" " for _ in range(12)] for _ in range(10)]
-    numbers = {}
-
-    def fill_word(word, row, col, is_across, number=None):
-        if number:
-            numbers[(row, col)] = number
-        for idx, char in enumerate(word):
-            r = row if is_across else row + idx
-            c = col + idx if is_across else col
-            if r < 10 and c < 12:
-                grid[r][c] = char
-
-    # Map user inputs into grid coordinates
-    if ans1: fill_word(ans1, 0, 0, True, 1)        # LITERATURE
-    else:    fill_word(" "*10, 0, 0, True, 1)
-    
-    if ans2: fill_word(ans2, 2, 7, True, 2)        # BOOK
-    else:    fill_word(" "*4, 2, 7, True, 2)
-    
-    if ans3: fill_word(ans3, 0, 4, False, 3)       # READ (intersects LITERATURE at E)
-    else:    fill_word(" "*4, 0, 4, False, 3)
-    
-    if ans4: fill_word(ans4, 3, 4, True, 4)        # WRITE (intersects READ at D)
-    else:    fill_word(" "*5, 3, 4, True, 4)
-    
-    if ans5: fill_word(ans5, 3, 8, False, 5)       # PENCIL (intersects WRITE at E)
-    else:    fill_word(" "*6, 3, 8, False, 5)
-    
-    if ans6: fill_word(ans6, 3, 8, True, 6)        # PHYLUM (intersects PENCIL at P)
-    else:    fill_word(" "*6, 3, 8, True, 6)
-    
-    if ans7: fill_word(ans7, 7, 0, True, 7)        # CHORDATA
-    else:    fill_word(" "*8, 7, 0, True, 7)
-
-    # Render Visual HTML Grid
-    st.write("### 🧩 Visual Crossword Map")
-    grid_html = "<div style='display: flex; flex-direction: column; align-items: center; margin-bottom: 20px;'>"
-    for r in range(10):
-        grid_html += "<div class='cw-row'>"
-        for c in range(12):
-            char = grid[r][c]
-            num_str = f"<span class='cw-num'>{numbers[(r,c)]}</span>" if (r,c) in numbers else ""
-            if char != " ":
-                display_char = char if char != " " else ""
-                grid_html += f"<div class='cw-cell'>{num_str}{display_char}</div>"
-            else:
-                grid_html += "<div class='cw-block'></div>"
-        grid_html += "</div>"
-    grid_html += "</div>"
-    
-    st.markdown(grid_html, unsafe_allow_html=True)
-
-    if st.button("Unlock Scroll II"):
-        if (ans1 == "LITERATURE" and ans2 == "BOOK" and ans3 == "READ" and 
-            ans4 == "WRITE" and ans5 == "PENCIL" and ans6 == "PHYLUM" and ans7 == "CHORDATA"):
-            st.success("🎉 Brilliant! Scroll II unseals: *'Words are keys to ancient mysteries.'*")
-            st.session_state.cw_passed = True
-        else:
-            st.error("Some answers are incorrect. Check your answers and try again!")
-
-    if st.session_state.get('cw_passed', False):
-        if st.button("Proceed to Scroll III ➡️"):
-            st.session_state.stage = 3
-            st.rerun()
-
-# ==========================================
-# PUZZLE 3: MUSIC PIANO CHALLENGE
-# ==========================================
-elif st.session_state.stage == 3:
-    st.markdown("<div class='scroll-box'><h3>📜 Scroll III: The Bard's Melody</h3><p>Play the target melody below on the piano keys. Hit <b>no wrong notes</b> and finish within <b>30 seconds</b>!</p></div>", unsafe_allow_html=True)
-
-    melody = [
+<script>
+    const melody = [
         "3rdG#", "3rdA", "4thC#", "3rdC#", "3rdE", "3rdD#", "3rdC#", "3rdC",
         "2ndG#", "2ndA", "2ndA#", "2ndB", "3rdC", "3rdC#", "3rdE", "3rdF"
-    ]
-    
-    time_limit = 30 # seconds
+    ];
 
-    st.subheader("Target Melody:")
-    st.code(" ➔ ".join(melody))
+    let playedSequence = [];
+    let audioCtx = null;
 
-    if st.session_state.piano_start_time is None:
-        if st.button("🎹 Start Timer & Play"):
-            st.session_state.piano_start_time = time.time()
-            st.session_state.piano_sequence = []
-            st.rerun()
-    else:
-        elapsed = int(time.time() - st.session_state.piano_start_time)
-        remaining = time_limit - elapsed
+    function initAudio() {
+        if (!audioCtx) {
+            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        }
+    }
 
-        if remaining <= 0:
-            st.error("⏰ Time's up! The melody dissolved into silence.")
-            if st.button("Retry Melody"):
-                st.session_state.piano_start_time = None
-                st.session_state.piano_sequence = []
-                st.rerun()
-        else:
-            st.warning(f"⏳ Time Remaining: **{remaining} seconds**")
+    function playTone(freq) {
+        initAudio();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+        
+        gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.6);
+        
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.6);
+    }
 
-            # Display progress
-            st.write("**Notes played so far:**")
-            st.info(" ➔ ".join(st.session_state.piano_sequence) if st.session_state.piano_sequence else "Click keys below to play...")
+    function handleNotePlay(note, freq, keyElem) {
+        playTone(freq);
+        
+        // Visual key press animation
+        keyElem.classList.add('active');
+        setTimeout(() => keyElem.classList.remove('active'), 200);
 
-            # Piano Keyboard UI setup
-            notes_lower = ["2ndG#", "2ndA", "2ndA#", "2ndB"]
-            notes_high = ["3rdC", "3rdC#", "3rdD#", "3rdE", "3rdF", "3rdG#", "3rdA", "4thC#"]
+        // Check Sequence
+        playedSequence.push(note);
+        document.getElementById('playedNotes').innerText = playedSequence.join(" ➔ ");
 
-            st.write("---")
-            st.write("**Lower Octave (l):**")
-            cols_l = st.columns(len(notes_lower))
-            for idx, note in enumerate(notes_lower):
-                if cols_l[idx].button(f"🎹 {note}", key=f"btn_l_{note}"):
-                    st.session_state.piano_sequence.append(note)
-                    st.rerun()
+        const currentIndex = playedSequence.length - 1;
 
-            st.write("**Higher Octave (h):**")
-            cols_h = st.columns(len(notes_high))
-            for idx, note in enumerate(notes_high):
-                if cols_h[idx].button(f"🎹 {note}", key=f"btn_h_{note}"):
-                    st.session_state.piano_sequence.append(note)
-                    st.rerun()
+        if (playedSequence[currentIndex] !== melody[currentIndex]) {
+            document.getElementById('feedbackMsg').innerHTML = "<span class='msg-error'>❌ WRONG NOTE! Resetting sequence...</span>";
+            playedSequence = [];
+            setTimeout(() => {
+                document.getElementById('playedNotes').innerText = "None";
+            }, 1000);
+        } else if (playedSequence.length === melody.length) {
+            document.getElementById('feedbackMsg').innerHTML = "<span class='msg-success'>🎉 FLAWLESS! You unlocked the scroll!</span>";
+            window.parent.postMessage({type: 'STREAMLIT_PIANO_PASSED'}, '*');
+        } else {
+            document.getElementById('feedbackMsg').innerText = "Keep going...";
+        }
+    }
 
-            # Check sequence validation
-            current_len = len(st.session_state.piano_sequence)
-            if current_len > 0:
-                # Check if current input matches the target melody prefix
-                if st.session_state.piano_sequence != melody[:current_len]:
-                    st.error("❌ Wrong note hit! The piano resets!")
-                    st.session_state.piano_sequence = []
-                    st.rerun()
+    // Attach click events
+    const keys = document.querySelectorAll('.key');
+    const keyMap = {};
 
-                # Check for victory
-                if st.session_state.piano_sequence == melody:
-                    st.success("🎉 Flawless Performance! Scroll III has unsealed!")
-                    if st.button("Claim Your Acceptance Letter 🏆"):
-                        st.session_state.stage = 4
-                        st.rerun()
+    keys.forEach(k => {
+        const note = k.getAttribute('data-note');
+        const freq = parseFloat(k.getAttribute('data-freq'));
+        const keyChar = k.getAttribute('data-key');
+        
+        keyMap[keyChar] = { note, freq, elem: k };
+
+        k.addEventListener('click', () => {
+            handleNotePlay(note, freq, k);
+        });
+    });
+
+    // Attach Physical Keyboard events
+    window.addEventListener('keydown', (e) => {
+        const char = e.key.toLowerCase();
+        if (keyMap[char]) {
+            handleNotePlay(keyMap[char].note, keyMap[char].freq, keyMap[char].elem);
+        }
+    });
+</script>
+</body>
+</html>
+"""
+
+# Embed JS component into Streamlit app
+components.html(piano_html, height=360)
 
 # ==========================================
 # FINAL REWARD: ACCEPTANCE LETTER
 # ==========================================
-elif st.session_state.stage == 4:
+if 'piano_completed' not in st.session_state:
+    st.session_state.piano_completed = False
+
+st.write("---")
+# Toggle completion checkbox or manual progression option
+unlock_scroll = st.checkbox("Check here once you win the piano challenge to reveal letter:")
+
+if unlock_scroll:
     st.balloons()
-    st.markdown("<div class='scroll-box' style='text-align: center; border-color: #ffd700;'><h2>✨ THE GRAND ACCEPTANCE LETTER ✨</h2><p>You have proven your intellect, wisdom, and musical harmony!</p></div>", unsafe_allow_html=True)
+    st.markdown("""
+        <div class='scroll-box' style='text-align: center; border-color: #ffd700;'>
+            <h2>✨ THE GRAND ACCEPTANCE LETTER ✨</h2>
+            <p>You have mastered the Bard's Piano and harmonized the ancient notes!</p>
+        </div>
+    """, unsafe_allow_html=True)
     
-    player_name = st.text_input("Enter your name for the Scroll of Honor:", "Brave Adventurer")
+    player_name = st.text_input("Enter your name for the Scroll of Honor:", "Brave Bard")
     
     letter_content = f"""
     =======================================================
@@ -357,11 +273,11 @@ elif st.session_state.stage == 4:
     
                        {player_name.upper()}
     
-    Has successfully conquered the Wordle Spell, solved the 
-    Ancient Lexicon Crossword, and harmonized the Bard's Piano.
+    Has successfully harmonized the Bard's Piano with complete
+    flawless perfection.
     
     You are officially ACCEPTED into the High Order of 
-    Master Adventurers with full honors!
+    Master Musicians & Adventurers with full honors!
     
     Given on this day in the RPG Realm.
     =======================================================
@@ -375,11 +291,3 @@ elif st.session_state.stage == 4:
         file_name=f"Acceptance_Letter_{player_name.replace(' ', '_')}.txt",
         mime="text/plain"
     )
-    
-    if st.button("🔄 Restart Quest"):
-        st.session_state.stage = 1
-        st.session_state.wordle_guesses = []
-        st.session_state.piano_sequence = []
-        st.session_state.piano_start_time = None
-        st.session_state.cw_passed = False
-        st.rerun()
