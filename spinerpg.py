@@ -4,7 +4,7 @@ import time
 # --- PAGE CONFIG ---
 st.set_page_config(page_title="RPG Treasure Hunt Quest", page_icon="📜", layout="centered")
 
-# --- CUSTOM RPG & WORDLE STYLING ---
+# --- CUSTOM RPG, WORDLE & CROSSWORD STYLING ---
 st.markdown("""
     <style>
     .stApp {
@@ -31,6 +31,7 @@ st.markdown("""
         box-shadow: 0px 0px 15px rgba(197, 160, 89, 0.2);
         margin-bottom: 20px;
     }
+    /* Wordle Styling */
     .wordle-box {
         display: flex;
         justify-content: center;
@@ -47,6 +48,44 @@ st.markdown("""
     .tile-present { background-color: #f9a825; border: 2px solid #f57f17; }
     .tile-absent { background-color: #37474f; border: 2px solid #263238; }
     .tile-empty { background-color: #1a1815; border: 2px solid #4a3b2c; color: #4a3b2c; }
+
+    /* Crossword Grid Styling */
+    .cw-cell {
+        width: 32px;
+        height: 32px;
+        border: 1px solid #8b5a2b;
+        background-color: #2b261f;
+        color: #f3e5ab;
+        text-align: center;
+        font-weight: bold;
+        font-size: 16px;
+        position: relative;
+        display: inline-block;
+        line-height: 30px;
+        vertical-align: middle;
+        margin: 1px;
+    }
+    .cw-block {
+        width: 32px;
+        height: 32px;
+        background-color: #12100e;
+        border: 1px solid #1a1815;
+        display: inline-block;
+        margin: 1px;
+        vertical-align: middle;
+    }
+    .cw-num {
+        position: absolute;
+        top: 1px;
+        left: 2px;
+        font-size: 9px;
+        color: #c5a059;
+        line-height: 1;
+    }
+    .cw-row {
+        white-space: nowrap;
+        height: 35px;
+    }
     </style>
 """, unsafe_allow_html=True)
 
@@ -134,40 +173,93 @@ if st.session_state.stage == 1:
             st.rerun()
 
 # ==========================================
-# PUZZLE 2: CROSSWORD
+# PUZZLE 2: CROSSWORD WITH VISUAL GRID
 # ==========================================
 elif st.session_state.stage == 2:
-    st.markdown("<div class='scroll-box'><h3>📜 Scroll II: The Lexicon Grid</h3><p>Fill in the answers to solve the Ancient Crossword grid!</p></div>", unsafe_allow_html=True)
+    st.markdown("<div class='scroll-box'><h3>📜 Scroll II: The Lexicon Grid</h3><p>Fill in the answers below to complete the Ancient Crossword grid!</p></div>", unsafe_allow_html=True)
     
     st.markdown("""
     **Clues:**
-    1. Written works of artistic value (Across) - *10 letters*
-    2. Written work bound together (Across) - *4 letters*
-    3. Look at and comprehend written text (Down) - *4 letters*
-    4. Mark letters or words on paper (Across) - *5 letters*
-    5. Tool used for writing/drawing (Down) - *6 letters*
-    6. Taxonomic rank below Kingdom (Across) - *6 letters*
-    7. Vertebrates belong to this phylum (Across) - *8 letters*
+    * **1 Across:** Written works of artistic value (10 letters)
+    * **2 Across:** Written work bound together (4 letters)
+    * **3 Down:** Look at and comprehend written text (4 letters)
+    * **4 Across:** Mark letters or words on paper (5 letters)
+    * **5 Down:** Tool used for writing/drawing (6 letters)
+    * **6 Across:** Taxonomic rank below Kingdom (6 letters)
+    * **7 Across:** Vertebrates belong to this phylum (8 letters)
     """)
 
     c1, c2 = st.columns(2)
     with c1:
-        ans1 = st.text_input("1. Across:", key="cw1").strip().capitalize()
-        ans2 = st.text_input("2. Across:", key="cw2").strip().capitalize()
-        ans3 = st.text_input("3. Down:", key="cw3").strip().capitalize()
-        ans4 = st.text_input("4. Across:", key="cw4").strip().capitalize()
+        ans1 = st.text_input("1. Across:", key="cw1").strip().upper()
+        ans2 = st.text_input("2. Across:", key="cw2").strip().upper()
+        ans3 = st.text_input("3. Down:", key="cw3").strip().upper()
+        ans4 = st.text_input("4. Across:", key="cw4").strip().upper()
     with c2:
-        ans5 = st.text_input("5. Down:", key="cw5").strip().capitalize()
-        ans6 = st.text_input("6. Across:", key="cw6").strip().capitalize()
-        ans7 = st.text_input("7. Across:", key="cw7").strip().capitalize()
+        ans5 = st.text_input("5. Down:", key="cw5").strip().upper()
+        ans6 = st.text_input("6. Across:", key="cw6").strip().upper()
+        ans7 = st.text_input("7. Across:", key="cw7").strip().upper()
+
+    # Build 10x12 Visual Grid Layout
+    grid = [[" " for _ in range(12)] for _ in range(10)]
+    numbers = {}
+
+    def fill_word(word, row, col, is_across, number=None):
+        if number:
+            numbers[(row, col)] = number
+        for idx, char in enumerate(word):
+            r = row if is_across else row + idx
+            c = col + idx if is_across else col
+            if r < 10 and c < 12:
+                grid[r][c] = char
+
+    # Map user inputs into grid coordinates
+    if ans1: fill_word(ans1, 0, 0, True, 1)        # LITERATURE
+    else:    fill_word(" "*10, 0, 0, True, 1)
+    
+    if ans2: fill_word(ans2, 2, 7, True, 2)        # BOOK
+    else:    fill_word(" "*4, 2, 7, True, 2)
+    
+    if ans3: fill_word(ans3, 0, 4, False, 3)       # READ (intersects LITERATURE at E)
+    else:    fill_word(" "*4, 0, 4, False, 3)
+    
+    if ans4: fill_word(ans4, 3, 4, True, 4)        # WRITE (intersects READ at D)
+    else:    fill_word(" "*5, 3, 4, True, 4)
+    
+    if ans5: fill_word(ans5, 3, 8, False, 5)       # PENCIL (intersects WRITE at E)
+    else:    fill_word(" "*6, 3, 8, False, 5)
+    
+    if ans6: fill_word(ans6, 3, 8, True, 6)        # PHYLUM (intersects PENCIL at P)
+    else:    fill_word(" "*6, 3, 8, True, 6)
+    
+    if ans7: fill_word(ans7, 7, 0, True, 7)        # CHORDATA
+    else:    fill_word(" "*8, 7, 0, True, 7)
+
+    # Render Visual HTML Grid
+    st.write("### 🧩 Visual Crossword Map")
+    grid_html = "<div style='display: flex; flex-direction: column; align-items: center; margin-bottom: 20px;'>"
+    for r in range(10):
+        grid_html += "<div class='cw-row'>"
+        for c in range(12):
+            char = grid[r][c]
+            num_str = f"<span class='cw-num'>{numbers[(r,c)]}</span>" if (r,c) in numbers else ""
+            if char != " ":
+                display_char = char if char != " " else ""
+                grid_html += f"<div class='cw-cell'>{num_str}{display_char}</div>"
+            else:
+                grid_html += "<div class='cw-block'></div>"
+        grid_html += "</div>"
+    grid_html += "</div>"
+    
+    st.markdown(grid_html, unsafe_allow_html=True)
 
     if st.button("Unlock Scroll II"):
-        if (ans1 == "Literature" and ans2 == "Book" and ans3 == "Read" and 
-            ans4 == "Write" and ans5 == "Pencil" and ans6 == "Phylum" and ans7 == "Chordata"):
+        if (ans1 == "LITERATURE" and ans2 == "BOOK" and ans3 == "READ" and 
+            ans4 == "WRITE" and ans5 == "PENCIL" and ans6 == "PHYLUM" and ans7 == "CHORDATA"):
             st.success("🎉 Brilliant! Scroll II unseals: *'Words are keys to ancient mysteries.'*")
             st.session_state.cw_passed = True
         else:
-            st.error("Some answers are incorrect. Check your spelling and try again!")
+            st.error("Some answers are incorrect. Check your answers and try again!")
 
     if st.session_state.get('cw_passed', False):
         if st.button("Proceed to Scroll III ➡️"):
