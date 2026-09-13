@@ -1322,7 +1322,7 @@ let xwordCurrentDir = "A";
 const xwordCellEls = [];
 const xwordCellWords = [];
 
-function buildCrossword() {
+function buildCrossword() {{
     if (xwordBuilt) return;
     xwordBuilt = true;
 
@@ -1330,82 +1330,82 @@ function buildCrossword() {
     const rows = CROSSWORD_DATA.rows;
     const cols = CROSSWORD_DATA.cols;
 
-    for (let r = 0; r < rows; r++) {
+    for (let r = 0; r < rows; r++) {{
         xwordCellEls.push(new Array(cols).fill(null));
         xwordCellWords.push(
-            new Array(cols).fill(null).map(() => ({ A: null, D: null }))
+            new Array(cols).fill(null).map(() => ({{ A: null, D: null }}))
         );
-    }
+    }}
 
     // Use the explicit clue numbers from CROSSWORD_DATA.
     // Do not generate numbers from grid position, because the clue
     // numbers are part of the puzzle itself.
-    const numMap = {};
+    const numMap = {{}};
 
-    Object.keys(CROSSWORD_DATA.clues).forEach(dir => {
-        CROSSWORD_DATA.clues[dir].forEach(clue => {
+    Object.keys(CROSSWORD_DATA.clues).forEach(dir => {{
+        CROSSWORD_DATA.clues[dir].forEach(clue => {{
             numMap[clue.row + "_" + clue.col] = clue.num;
-        });
-    });
+        }});
+    }});
 
     // Assign word indices to cells.
     const clues = CROSSWORD_DATA.clues;
 
-    clues.across.forEach((clue, idx) => {
+    clues.across.forEach((clue, idx) => {{
         const r = clue.row;
         const c = clue.col;
 
-        for (let i = 0; i < clue.length; i++) {
+        for (let i = 0; i < clue.length; i++) {{
             if (
                 r >= 0 && r < rows &&
                 c + i >= 0 && c + i < cols &&
                 grid[r][c + i] !== null
-            ) {
+            ) {{
                 xwordCellWords[r][c + i].A = idx;
-            }
-        }
-    });
+            }}
+        }}
+    }});
 
-    clues.down.forEach((clue, idx) => {
+    clues.down.forEach((clue, idx) => {{
         const r = clue.row;
         const c = clue.col;
 
-        for (let i = 0; i < clue.length; i++) {
+        for (let i = 0; i < clue.length; i++) {{
             if (
                 r + i >= 0 && r + i < rows &&
                 c >= 0 && c < cols &&
                 grid[r + i][c] !== null
-            ) {
+            ) {{
                 xwordCellWords[r + i][c].D = idx;
-            }
-        }
-    });
+            }}
+        }}
+    }});
 
     // Render grid.
     const gridEl = document.getElementById("xwordGrid");
     gridEl.style.gridTemplateColumns = "repeat(" + cols + ", 30px)";
     gridEl.style.gridTemplateRows = "repeat(" + rows + ", 30px)";
 
-    for (let r = 0; r < rows; r++) {
-        for (let c = 0; c < cols; c++) {
+    for (let r = 0; r < rows; r++) {{
+        for (let c = 0; c < cols; c++) {{
 
             const cellWrap = document.createElement("div");
             cellWrap.className = "xword-cell";
 
-            if (grid[r][c] === null) {
+            if (grid[r][c] === null) {{
                 cellWrap.classList.add("blocked");
                 gridEl.appendChild(cellWrap);
                 continue;
-            }
+            }}
 
             const key = r + "_" + c;
 
-            if (numMap[key]) {
+            if (numMap[key]) {{
                 const numEl = document.createElement("span");
                 numEl.className = "xword-num";
                 numEl.textContent = numMap[key];
                 cellWrap.appendChild(numEl);
-            }
+            }}
 
             const input = document.createElement("input");
             input.maxLength = 1;
@@ -1415,19 +1415,19 @@ function buildCrossword() {
 
             input.addEventListener("focus", () => setActiveCell(r, c));
 
-            input.addEventListener("click", () => {
+            input.addEventListener("click", () => {{
                 const cellInfo = xwordCellWords[r][c];
 
-                if (cellInfo.A !== null && cellInfo.D !== null) {
+                if (cellInfo.A !== null && cellInfo.D !== null) {{
                     xwordCurrentDir = (xwordCurrentDir === "A") ? "D" : "A";
-                } else if (cellInfo.A !== null) {
+                }} else if (cellInfo.A !== null) {{
                     xwordCurrentDir = "A";
-                } else if (cellInfo.D !== null) {
+                }} else if (cellInfo.D !== null) {{
                     xwordCurrentDir = "D";
-                }
+                }}
 
                 setActiveCell(r, c);
-            });
+            }});
 
             input.addEventListener("keydown", (e) => onXwordKeydown(e, r, c));
             input.addEventListener("input", (e) => onXwordInput(e, r, c));
@@ -1435,21 +1435,21 @@ function buildCrossword() {
             cellWrap.appendChild(input);
             gridEl.appendChild(cellWrap);
             xwordCellEls[r][c] = input;
-        }
-    }
+        }}
+    }}
 
     renderClues();
     document.getElementById("checkCrosswordBtn").addEventListener("click", checkCrossword);
-}
+}}
 
-function renderClues() {
+function renderClues() {{
     const acrossCluesEl = document.getElementById("acrossClues");
     const downCluesEl = document.getElementById("downClues");
 
     acrossCluesEl.innerHTML = "";
     downCluesEl.innerHTML = "";
 
-    CROSSWORD_DATA.clues.across.forEach((clue, idx) => {
+    CROSSWORD_DATA.clues.across.forEach((clue, idx) => {{
         const li = document.createElement("li");
         li.className = "clue-item";
         li.dataset.num = clue.num;
@@ -1457,15 +1457,15 @@ function renderClues() {
         li.dataset.idx = idx;
 
         li.innerHTML =
-            `<span class="clue-num">${clue.num}.</span> ` +
-            `${clue.clue} ` +
-            `<span class="clue-len">(${clue.length})</span>`;
+            `<span class="clue-num">${{clue.num}}.</span> ` +
+            `${{clue.clue}} ` +
+            `<span class="clue-len">(${{clue.length}})</span>`;
 
         li.addEventListener("click", () => jumpToClue("A", idx));
         acrossCluesEl.appendChild(li);
-    });
+    }});
 
-    CROSSWORD_DATA.clues.down.forEach((clue, idx) => {
+    CROSSWORD_DATA.clues.down.forEach((clue, idx) => {{
         const li = document.createElement("li");
         li.className = "clue-item";
         li.dataset.num = clue.num;
@@ -1473,16 +1473,16 @@ function renderClues() {
         li.dataset.idx = idx;
 
         li.innerHTML =
-            `<span class="clue-num">${clue.num}.</span> ` +
-            `${clue.clue} ` +
-            `<span class="clue-len">(${clue.length})</span>`;
+            `<span class="clue-num">${{clue.num}}.</span> ` +
+            `${{clue.clue}} ` +
+            `<span class="clue-len">(${{clue.length}})</span>`;
 
         li.addEventListener("click", () => jumpToClue("D", idx));
         downCluesEl.appendChild(li);
-    });
-}
+    }});
+}}
 
-function jumpToClue(dir, idx) {
+function jumpToClue(dir, idx) {{
     const clue = CROSSWORD_DATA.clues[dir === "A" ? "across" : "down"][idx];
 
     xwordCurrentDir = dir;
@@ -1492,17 +1492,17 @@ function jumpToClue(dir, idx) {
     if (el) el.focus();
 
     setActiveCell(clue.row, clue.col);
-}
+}}
 
-function clearActiveHighlight() {
+function clearActiveHighlight() {{
     document.querySelectorAll(".xword-cell input.active-word")
         .forEach(el => el.classList.remove("active-word"));
 
     document.querySelectorAll(".clue-item.active-clue")
         .forEach(el => el.classList.remove("active-clue"));
-}
+}}
 
-function setActiveCell(r, c) {
+function setActiveCell(r, c) {{
     if (xwordSolved) return;
 
     clearActiveHighlight();
@@ -1511,13 +1511,13 @@ function setActiveCell(r, c) {
 
     let dir = xwordCurrentDir;
 
-    if (cellInfo[dir] === null) {
+    if (cellInfo[dir] === null) {{
         dir = (dir === "A") ? "D" : "A";
 
-        if (cellInfo[dir] !== null) {
+        if (cellInfo[dir] !== null) {{
             xwordCurrentDir = dir;
-        }
-    }
+        }}
+    }}
 
     const wordIdx = cellInfo[xwordCurrentDir];
 
@@ -1529,14 +1529,14 @@ function setActiveCell(r, c) {
         ][wordIdx];
 
     // Highlight exactly clue.length cells.
-    for (let k = 0; k < clue.length; k++) {
+    for (let k = 0; k < clue.length; k++) {{
         const rr = xwordCurrentDir === "A" ? clue.row : clue.row + k;
         const cc = xwordCurrentDir === "A" ? clue.col + k : clue.col;
 
-        if (xwordCellEls[rr] && xwordCellEls[rr][cc]) {
+        if (xwordCellEls[rr] && xwordCellEls[rr][cc]) {{
             xwordCellEls[rr][cc].classList.add("active-word");
-        }
-    }
+        }}
+    }}
 
     const clueEl = document.querySelector(
         '.clue-item[data-num="' +
@@ -1547,13 +1547,13 @@ function setActiveCell(r, c) {
     );
 
     if (clueEl) clueEl.classList.add("active-clue");
-}
+}}
 
-function moveFocus(r, c, dir, step) {
+function moveFocus(r, c, dir, step) {{
     let rr = r;
     let cc = c;
 
-    while (true) {
+    while (true) {{
         rr += (dir === "D") ? step : 0;
         cc += (dir === "A") ? step : 0;
 
@@ -1562,143 +1562,143 @@ function moveFocus(r, c, dir, step) {
             rr >= CROSSWORD_DATA.rows ||
             cc < 0 ||
             cc >= CROSSWORD_DATA.cols
-        ) {
+        ) {{
             return;
-        }
+        }}
 
-        if (xwordCellEls[rr][cc]) {
+        if (xwordCellEls[rr][cc]) {{
             xwordCellEls[rr][cc].focus();
             return;
-        }
+        }}
 
         return;
-    }
-}
+    }}
+}}
 
-function onXwordInput(e, r, c) {
+function onXwordInput(e, r, c) {{
     const val = e.target.value.toUpperCase().replace(/[^A-Z]/g, "");
 
     e.target.value = val.slice(-1);
     e.target.classList.remove("correct", "wrong");
 
-    if (val) {
+    if (val) {{
         moveFocus(r, c, xwordCurrentDir, 1);
-    }
-}
+    }}
+}}
 
-function onXwordKeydown(e, r, c) {
+function onXwordKeydown(e, r, c) {{
     if (xwordSolved) return;
 
-    if (e.key === "Backspace") {
-        if (!e.target.value) {
+    if (e.key === "Backspace") {{
+        if (!e.target.value) {{
             e.preventDefault();
             moveFocus(r, c, xwordCurrentDir, -1);
-        }
+        }}
         return;
-    }
+    }}
 
-    if (e.key === "ArrowRight") {
+    if (e.key === "ArrowRight") {{
         e.preventDefault();
         xwordCurrentDir = "A";
         moveFocus(r, c, "A", 1);
         return;
-    }
+    }}
 
-    if (e.key === "ArrowLeft") {
+    if (e.key === "ArrowLeft") {{
         e.preventDefault();
         xwordCurrentDir = "A";
         moveFocus(r, c, "A", -1);
         return;
-    }
+    }}
 
-    if (e.key === "ArrowDown") {
+    if (e.key === "ArrowDown") {{
         e.preventDefault();
         xwordCurrentDir = "D";
         moveFocus(r, c, "D", 1);
         return;
-    }
+    }}
 
-    if (e.key === "ArrowUp") {
+    if (e.key === "ArrowUp") {{
         e.preventDefault();
         xwordCurrentDir = "D";
         moveFocus(r, c, "D", -1);
         return;
-    }
-}
+    }}
+}}
 
-function checkCrossword() {
+function checkCrossword() {{
     const grid = CROSSWORD_DATA.grid;
 
     let allFilled = true;
     let allCorrect = true;
 
-    for (let r = 0; r < CROSSWORD_DATA.rows; r++) {
-        for (let c = 0; c < CROSSWORD_DATA.cols; c++) {
+    for (let r = 0; r < CROSSWORD_DATA.rows; r++) {{
+        for (let c = 0; c < CROSSWORD_DATA.cols; c++) {{
 
             if (grid[r][c] === null) continue;
 
             const el = xwordCellEls[r][c];
             const val = el.value.toUpperCase();
 
-            if (!val) {
+            if (!val) {{
                 allFilled = false;
                 continue;
-            }
+            }}
 
-            if (val === grid[r][c]) {
+            if (val === grid[r][c]) {{
                 el.classList.add("correct");
                 el.classList.remove("wrong");
-            } else {
+            }} else {{
                 allCorrect = false;
                 el.classList.remove("correct");
                 el.classList.add("wrong");
-            }
-        }
-    }
+            }}
+        }}
+    }}
 
     const feedbackEl = document.getElementById("xwordFeedback");
 
-    if (!allFilled) {
+    if (!allFilled) {{
         feedbackEl.innerHTML =
             '<span style="color:#e57373;">Fill in every cell first.</span>';
         return;
-    }
+    }}
 
-    if (!allCorrect) {
+    if (!allCorrect) {{
         feedbackEl.innerHTML =
             '<span style="color:#e57373;">Some letters are off — green is correct, red is wrong.</span>';
         return;
-    }
+    }}
 
     xwordSolved = true;
 
     feedbackEl.innerHTML =
         '<span style="color:#81c784;">FLAWLESS! Puzzle II solved.</span>';
 
-    if (window.confetti) {
-        confetti({
+    if (window.confetti) {{
+        confetti({{
             particleCount: 200,
             spread: 100,
-            origin: { y: 0.5 },
+            origin: {{ y: 0.5 }},
             colors: ["#d8b878", "#f0e4cf", "#6d8a5b", "#c4a04a"]
-        });
-    }
+        }});
+    }}
 
-    setTimeout(() => {
+    setTimeout(() => {{
         document.getElementById("foundersBox").classList.add("show");
         setTimeout(resizeFrame, 50);
 
-        document.getElementById("foundersBox").scrollIntoView({
+        document.getElementById("foundersBox").scrollIntoView({{
             behavior: "smooth",
             block: "start"
-        });
-    }, 1000);
+        }});
+    }}, 1000);
 
     window.parent.postMessage(
-        { type: "STREAMLIT_CROSSWORD_PASSED" },
+        {{ type: "STREAMLIT_CROSSWORD_PASSED" }},
         "*"
     );
-}
+}}
 
 /* ============= Lightbox for founder photos ============= */
 
