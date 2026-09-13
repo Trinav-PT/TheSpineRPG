@@ -27,7 +27,8 @@ def load_image_data_uri(basename):
 def render_html_frame(html_string, height, scrolling=False):
     """Render raw HTML in an iframe, using the new st.iframe API when
     available and falling back to components.html on older Streamlit
-    versions."""
+    versions. st.iframe auto-sizes to content and has no `scrolling`
+    argument, so that kwarg only applies to the legacy fallback."""
     try:
         st.iframe(html_string, height=height)
     except AttributeError:
@@ -37,8 +38,8 @@ def render_html_frame(html_string, height, scrolling=False):
 
 def get_qr_html():
     """Return an <img> tag for a real Instagram QR code if one has been
-    dropped next to this script, otherwise fall back to a stylised
-    placeholder graphic."""
+    dropped next to this script (qr.png/.jpg/.jpeg/...), otherwise fall
+    back to a stylised placeholder graphic."""
     uri = load_image_data_uri("qr")
 
     if uri:
@@ -48,6 +49,7 @@ def get_qr_html():
             f'border:2px solid #d8b878;">'
         )
 
+    # Placeholder shown until a real QR image is added.
     return """
     <div style="width:220px;height:220px;margin:0 auto;border:2px dashed #a8875a;
                 border-radius:10px;display:flex;align-items:center;justify-content:center;
@@ -92,6 +94,16 @@ def build_new_crossword_grid():
     rows = 13
     cols = 13
     grid = [[None] * cols for _ in range(rows)]
+
+    # Answer placements:
+    # 1 Down  : READING CIRCLE
+    # 2 Down  : PHYLUM
+    # 3 Across: MURDER BALLAD
+    # 4 Down  : HOGWARTS
+    # 5 Down  : BONEYARD
+    # 6 Across: CHORDATA
+    # 7 Across: READERS
+    # 8 Across: CRANIUM
 
     placements = [
         ("READINGCIRCLE", "D", 0, 3),
@@ -187,7 +199,6 @@ CROSSWORD_JSON = json.dumps({
 
 QR_IMAGE_HTML = get_qr_html()
 
-
 # ----------------------------------------------------------------------------
 # FOUNDER PHOTOS + CHEWIE EASTER EGG
 # ----------------------------------------------------------------------------
@@ -213,16 +224,12 @@ for member, basenames in FOUNDER_PHOTO_BASENAMES.items():
 
 FOUNDER_PHOTOS_JSON = json.dumps(founder_photos)
 
-# Chewie is specifically chewie.jpeg.
-# load_image_data_uri("chewie") checks .png, .jpg, .jpeg, .webp, .gif.
 CHEWIE_IMAGE_URI = load_image_data_uri("chewie")
-
-if CHEWIE_IMAGE_URI is None:
-    CHEWIE_IMAGE_URI = ""
-
+CHEWIE_URI_JSON = json.dumps(CHEWIE_IMAGE_URI)
 
 # ----------------------------------------------------------------------------
-# PUZZLE III DATA (The Melody)
+# PUZZLE III DATA (The Melody) — generated exactly as in the standalone
+# SPINE Chronicles Puzzle III script, unchanged.
 # ----------------------------------------------------------------------------
 
 melody_sequence = [
@@ -345,17 +352,14 @@ for i, (note, freq) in enumerate(notes):
     else:
         white_counter += 1
 
-
 st.set_page_config(
     page_title="SPINE Chronicles",
     layout="wide"
 )
 
-
 # ----------------------------------------------------------------------------
-# GLOBAL THEME
+# GLOBAL THEME (browns & beiges)
 # ----------------------------------------------------------------------------
-
 st.markdown("""
 <style>
 
@@ -365,6 +369,7 @@ st.markdown("""
     font-family: Georgia, serif;
 }
 
+/* hide default streamlit chrome a bit so the intro feels more like a scroll */
 header[data-testid="stHeader"] {
     background: transparent;
 }
@@ -385,6 +390,8 @@ header[data-testid="stHeader"] {
     padding: 16px;
     margin-top: 18px;
 }
+
+/* --- Intro / landing --- */
 
 .intro-wrap {
     min-height: 60vh;
@@ -469,671 +476,13 @@ header[data-testid="stHeader"] {
     margin: 50px 0 30px;
 }
 
-
-/* -------------------------------------------------------------------------
-   WORDLE
-   ------------------------------------------------------------------------- */
-
-.wordle-placeholder {
-    min-height: 20px;
-}
-
-
-/* -------------------------------------------------------------------------
-   PUZZLE BOXES
-   ------------------------------------------------------------------------- */
-
-#qrBox, #crosswordBox, #foundersBox, #pianoBox {
-    margin-top: 22px;
-    padding: 22px;
-    background: #3c2a1c;
-    border: 2px solid #d8b878;
-    border-radius: 10px;
-    text-align: center;
-    width: 100%;
-    max-width: 620px;
-    display: none;
-}
-
-#qrBox.show, #crosswordBox.show, #foundersBox.show, #pianoBox.show {
-    display: block;
-}
-
-#pianoBox {
-    max-width: 1300px;
-}
-
-.founders-lore {
-    font-size: 15px;
-    line-height: 1.8;
-    color: #f0e4cf;
-    font-family: "Times New Roman", Times, serif;
-    margin-bottom: 22px;
-    text-align: left;
-}
-
-.founders-grid {
-    display: flex;
-    flex-direction: column;
-    gap: 28px;
-    margin-bottom: 22px;
-    align-items: center;
-}
-
-.founder-card {
-    text-align: center;
-    width: 100%;
-    max-width: 350px;
-}
-
-.founder-name {
-    font-size: 16px;
-    font-weight: bold;
-    color: #ffe9a8;
-    margin-bottom: 12px;
-    letter-spacing: 1px;
-}
-
-.founder-batch {
-    display: block;
-    font-size: 13px;
-    color: #d8b878;
-    font-weight: normal;
-    margin-top: 4px;
-    letter-spacing: 0.5px;
-}
-
-.founder-photos {
-    display: flex;
-    gap: 12px;
-    justify-content: center;
-    flex-wrap: wrap;
-}
-
-.founder-photo {
-    width: 100px;
-    height: 120px;
-    object-fit: cover;
-    border: 2px solid #d8b878;
-    border-radius: 6px;
-    cursor: pointer;
-    transition: transform .2s, box-shadow .2s;
-}
-
-.founder-photo:hover {
-    transform: scale(1.05);
-    box-shadow: 0 0 12px rgba(216, 184, 120, 0.4);
-}
-
-
-/* -------------------------------------------------------------------------
-   LIGHTBOX
-   ------------------------------------------------------------------------- */
-
-.lightbox {
-    display: none;
-    position: fixed;
-    z-index: 9999;
-    left: 0;
-    top: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.9);
-    animation: fadeIn .2s;
-}
-
-.lightbox.show {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.lightbox-image {
-    max-width: 90%;
-    max-height: 80vh;
-    object-fit: contain;
-    border-radius: 6px;
-    border: 3px solid #d8b878;
-}
-
-.lightbox-close {
-    position: absolute;
-    top: 20px;
-    right: 30px;
-    color: #f0e4cf;
-    font-size: 40px;
-    font-weight: bold;
-    cursor: pointer;
-    transition: color .2s;
-}
-
-.lightbox-close:hover {
-    color: #ffe9a8;
-}
-
-.lightbox-nav {
-    position: absolute;
-    top: 50%;
-    transform: translateY(-50%);
-    background: rgba(216, 184, 120, 0.2);
-    color: #f0e4cf;
-    border: none;
-    font-size: 28px;
-    padding: 12px 18px;
-    cursor: pointer;
-    border-radius: 4px;
-    transition: background .2s;
-    z-index: 10000;
-}
-
-.lightbox-nav:hover {
-    background: rgba(216, 184, 120, 0.4);
-}
-
-.lightbox-prev {
-    left: 20px;
-}
-
-.lightbox-next {
-    right: 20px;
-}
-
-.lightbox-counter {
-    position: absolute;
-    bottom: 20px;
-    left: 50%;
-    transform: translateX(-50%);
-    color: #f0e4cf;
-    font-size: 14px;
-    background: rgba(0, 0, 0, 0.5);
-    padding: 8px 16px;
-    border-radius: 4px;
-    letter-spacing: 1px;
-}
-
-
-/* -------------------------------------------------------------------------
-   CROSSWORD
-   ------------------------------------------------------------------------- */
-
-.qr-caption {
-    margin-top: 14px;
-    font-size: 15px;
-    line-height: 1.7;
-    color: #f0e4cf;
-    font-family: "Times New Roman", Times, serif;
-}
-
-.xword-title {
-    font-size: 20px;
-    font-weight: bold;
-    color: #ffe9a8;
-    margin-bottom: 14px;
-}
-
-.xword-layout {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 26px;
-    justify-content: center;
-    align-items: flex-start;
-    text-align: left;
-}
-
-.xword-grid {
-    display: grid;
-    gap: 2px;
-    background: #221d17;
-    padding: 6px;
-    border-radius: 6px;
-}
-
-.xword-cell {
-    position: relative;
-    width: 30px;
-    height: 30px;
-}
-
-.xword-cell input {
-    width: 100%;
-    height: 100%;
-    border: 1px solid #a8875a;
-    background: #f0e4cf;
-    color: #221d17;
-    text-align: center;
-    font-family: Georgia, serif;
-    font-weight: bold;
-    font-size: 15px;
-    text-transform: uppercase;
-    padding: 0;
-    outline: none;
-}
-
-.xword-cell input.active-word {
-    background: #e8d3a0;
-}
-
-.xword-cell input:focus {
-    background: #ffe9a8;
-}
-
-.xword-cell input.correct {
-    background: #6d8a5b;
-    color: #fff;
-}
-
-.xword-cell input.wrong {
-    background: #8b3a3a;
-    color: #fff;
-}
-
-.xword-cell.blocked {
-    background: #221d17;
-}
-
-.xword-num {
-    position: absolute;
-    top: 0;
-    left: 2px;
-    font-size: 8px;
-    color: #221d17;
-    z-index: 2;
-    pointer-events: none;
-}
-
-.clue-cols {
-    display: flex;
-    gap: 26px;
-    flex-wrap: wrap;
-    max-width: 450px;
-}
-
-.clue-col {
-    min-width: 200px;
-}
-
-.clue-title {
-    font-weight: bold;
-    color: #ffe9a8;
-    margin-bottom: 6px;
-    font-size: 14px;
-    letter-spacing: 1px;
-    text-transform: uppercase;
-}
-
-.clue-list {
-    list-style: none;
-    margin: 0 0 16px 0;
-    padding: 0;
-}
-
-.clue-item {
-    font-size: 13px;
-    line-height: 1.5;
-    color: #f0e4cf;
-    margin-bottom: 10px;
-    padding: 4px;
-    border-radius: 3px;
-}
-
-.clue-item.active-clue {
-    background: rgba(216, 184, 120, 0.2);
-    color: #ffe9a8;
-}
-
-.clue-num {
-    font-weight: bold;
-    color: #d8b878;
-}
-
-.clue-len {
-    color: #a8875a;
-    font-style: italic;
-}
-
-
-/* -------------------------------------------------------------------------
-   PUZZLE III: PIANO
-   ------------------------------------------------------------------------- */
-
-#pianoApp {
-    width: max-content;
-    min-width: 100%;
-    padding: 8px 10px 20px;
-    outline: none;
-}
-
-#pianoStatus {
-    background: #2b261f;
-    border: 1px solid #c5a059;
-    border-radius: 7px;
-    padding: 10px 14px;
-    margin-bottom: 14px;
-    text-align: center;
-    min-width: 1250px;
-}
-
-#pianoActivation {
-    color: #f3e5ab;
-    font-size: 13px;
-    margin-top: 4px;
-}
-
-#pianoFeedback {
-    margin-top: 6px;
-    min-height: 20px;
-    font-weight: bold;
-}
-
-.piano-wrapper {
-    position: relative;
-    height: 245px;
-    width: 1250px;
-    background: #050505;
-    border-radius: 10px;
-    padding: 10px;
-    box-shadow: 0 12px 25px rgba(0,0,0,.65);
-    user-select: none;
-    cursor: pointer;
-}
-
-.piano {
-    position: relative;
-    height: 225px;
-    width: 1200px;
-}
-
-.piano-key {
-    position: absolute;
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-end;
-    align-items: center;
-    cursor: pointer;
-    user-select: none;
-    transition: background .04s, transform .04s;
-}
-
-.white-key {
-    top: 0;
-    width: 48px;
-    height: 225px;
-    background: linear-gradient(to bottom, #fff 0%, #e5e5e5 100%);
-    border: 1px solid #111;
-    border-radius: 0 0 5px 5px;
-    color: #222;
-    z-index: 1;
-    padding-bottom: 12px;
-}
-
-.black-key {
-    top: 0;
-    width: 29px;
-    height: 140px;
-    background: linear-gradient(to bottom, #333 0%, #050505 100%);
-    border: 1px solid #000;
-    border-radius: 0 0 5px 5px;
-    color: #f3e5ab;
-    z-index: 3;
-    padding-bottom: 9px;
-}
-
-.white-key.active {
-    background: #cfcfcf;
-    transform: translateY(2px);
-}
-
-.black-key.active {
-    background: #666;
-    transform: translateY(2px);
-}
-
-.white-key.target {
-    box-shadow: inset 0 -7px 0 #c5a059;
-}
-
-.black-key.target {
-    box-shadow: inset 0 -7px 0 #c5a059;
-}
-
-.piano-key.wrong {
-    background: #8b3a3a !important;
-    color: white;
-}
-
-.note-label {
-    font-size: 11px;
-    font-weight: bold;
-}
-
-.computer-key {
-    margin-top: 5px;
-    padding: 3px 6px;
-    border-radius: 4px;
-    background: #8b5a2b;
-    color: white;
-    font-size: 11px;
-    font-family: Arial, sans-serif;
-    font-weight: bold;
-}
-
-.black-key .computer-key {
-    background: #8b5a2b;
-}
-
-#sequence {
-    min-width: 1250px;
-    margin-top: 18px;
-    padding: 14px;
-    background: #211e1a;
-    border: 2px solid #80652e;
-    border-radius: 9px;
-    text-align: center;
-}
-
-.sequence-title {
-    font-weight: bold;
-    color: #f3e5ab;
-    margin-bottom: 10px;
-}
-
-.seq-note {
-    display: inline-block;
-    min-width: 42px;
-    padding: 7px 5px;
-    margin: 3px;
-    border-radius: 5px;
-    background: #3a3328;
-    border: 1px solid #80652e;
-    font-family: monospace;
-    font-size: 12px;
-}
-
-.seq-note.current {
-    background: #c5a059;
-    color: #17130e;
-    font-weight: bold;
-}
-
-.seq-note.done {
-    background: #536b45;
-    color: white;
-}
-
-.seq-note.wrong {
-    background: #8b3a3a;
-    color: white;
-}
-
-#acceptanceLetter {
-    min-width: 1250px;
-    margin-top: 22px;
-    padding: 25px;
-    background: #211e1a;
-    border: 2px solid #80652e;
-    border-radius: 10px;
-    text-align: center;
-    color: #e0d5c1;
-}
-
-#acceptanceLetter.locked {
-    opacity: 0.7;
-}
-
-#letterLockedMessage {
-    font-size: 18px;
-    color: #c5a059;
-    padding: 20px;
-}
-
-#letterContent {
-    border: 3px double #c5a059;
-    padding: 25px;
-    background: #2b261f;
-}
-
-.letter-title {
-    font-size: 24px;
-    font-weight: bold;
-    color: #ffd700;
-    margin-bottom: 15px;
-}
-
-#playerName {
-    display: block;
-    margin: 12px auto;
-    padding: 10px;
-    width: 300px;
-    font-family: Georgia, serif;
-    font-size: 16px;
-    background: #17130e;
-    color: #e0d5c1;
-    border: 1px solid #c5a059;
-    border-radius: 5px;
-}
-
-#downloadLetter {
-    margin-top: 10px;
-    padding: 12px 20px;
-    background: #c5a059;
-    color: #17130e;
-    border: none;
-    border-radius: 6px;
-    font-weight: bold;
-    font-size: 15px;
-    cursor: pointer;
-}
-
-#downloadLetter:hover {
-    background: #ffd700;
-}
-
-#letterPreview {
-    text-align: left;
-    white-space: pre-wrap;
-    margin-top: 20px;
-    padding: 20px;
-    background: #17130e;
-    border: 1px solid #80652e;
-    color: #e0d5c1;
-}
-
-
-/* -------------------------------------------------------------------------
-   CHEWIE EASTER EGG
-   ------------------------------------------------------------------------- */
-
-.chewie-overlay {
-    display: none;
-    position: fixed;
-    z-index: 10001;
-    left: 0;
-    top: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.75);
-    cursor: pointer;
-}
-
-.chewie-overlay.show {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.chewie-card {
-    text-align: center;
-    cursor: default;
-}
-
-.chewie-photo {
-    display: block;
-    max-width: 320px;
-    max-height: 60vh;
-    width: auto;
-    height: auto;
-    object-fit: contain;
-    border-radius: 14px;
-    border: 4px solid #d8b878;
-    box-shadow: 0 0 40px rgba(216, 184, 120, 0.5);
-    animation: chewiePopIn 0.6s cubic-bezier(.34, 1.56, .64, 1) forwards;
-}
-
-@keyframes chewiePopIn {
-    0% {
-        transform: scale(0) rotate(-20deg);
-        opacity: 0;
-    }
-
-    55% {
-        transform: scale(1.2) rotate(10deg);
-        opacity: 1;
-    }
-
-    75% {
-        transform: scale(0.92) rotate(-5deg);
-    }
-
-    100% {
-        transform: scale(1) rotate(0deg);
-    }
-}
-
-.chewie-caption {
-    margin-top: 16px;
-    font-size: 22px;
-    font-weight: bold;
-    color: #ffe9a8;
-    letter-spacing: 1px;
-    text-shadow: 0 0 12px rgba(216, 184, 120, 0.6);
-    animation: chewieWiggle 1.8s ease-in-out infinite;
-}
-
-@keyframes chewieWiggle {
-    0%, 100% {
-        transform: rotate(-2deg);
-    }
-
-    50% {
-        transform: rotate(2deg);
-    }
-}
-
-.chewie-hint {
-    margin-top: 8px;
-    font-size: 12px;
-    color: #c9b98d;
-    font-style: italic;
-}
-
 </style>
 """, unsafe_allow_html=True)
 
 
 # ----------------------------------------------------------------------------
-# INTRO / LANDING
+# INTRO / LANDING SECTION
 # ----------------------------------------------------------------------------
-
 st.markdown("""
 <div class="intro-wrap">
 <div class="greetings-title">Greetings.</div>
@@ -1157,9 +506,8 @@ st.markdown('<hr class="divider-gold">', unsafe_allow_html=True)
 
 
 # ----------------------------------------------------------------------------
-# PUZZLE I
+# PUZZLE I — WORDLE (answer: SPINE)
 # ----------------------------------------------------------------------------
-
 st.markdown("""
 <div class="scroll-box">
 <h3>Puzzle I: The Word</h3>
@@ -1168,7 +516,7 @@ A five-letter word lies at the heart of this club.
 Guess it within <b>6 tries</b> to move forward.
 </p>
 <p>
-Type letters, press <b>Enter</b> to submit your guess,
+Type letters, press <b>Enter</b> to submit a guess,
 and <b>Backspace</b> to delete. You can also use the
 on-screen keyboard. <b>Click the puzzle box below first</b>
 so your keyboard connects to it.
@@ -1183,14 +531,12 @@ so your keyboard connects to it.
 
 WORDLE_ANSWER = "SPINE"
 
-
 wordle_html = f"""
 <!DOCTYPE html>
 <html>
 <head>
 <meta charset="UTF-8">
 <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
-
 <style>
 
 * {{
@@ -1411,9 +757,6 @@ body {{
 .cta-button:hover {{
     background: #ffe9a8;
 }}
-
-
-/* QR / CROSSWORD / FOUNDERS / PIANO */
 
 #qrBox, #crosswordBox, #foundersBox, #pianoBox {{
     margin-top: 22px;
@@ -1718,8 +1061,7 @@ body {{
     font-style: italic;
 }}
 
-
-/* PIANO */
+/* --- Puzzle III: The Melody (piano) --- */
 
 #pianoApp {{
     width: max-content;
@@ -1963,25 +1305,34 @@ body {{
     color: #e0d5c1;
 }}
 
-
-/* -------------------------------------------------------------------------
-   CHEWIE
-   ------------------------------------------------------------------------- */
+/* --- Chewie easter egg ---
+   NOTE: this used to be `position: fixed` covering the whole screen.
+   Inside a Streamlit components.html/st.iframe, the iframe is resized
+   to exactly the height of its content (see resizeFrame() below) and
+   never scrolls internally — the OUTER Streamlit page is what scrolls.
+   That means a `position: fixed` element inside the iframe is pinned to
+   the top of the (very tall) iframe box, not to the visible part of the
+   browser window. By the time someone finishes Puzzle III they've
+   scrolled far down the outer page, so the "fixed" popup was rendering
+   off-screen, above the visible area — that's why it never appeared.
+   Fix: render it as a normal in-flow card right after the piano/letter
+   section (where the player already is) and scroll it into view. */
 
 .chewie-overlay {{
     display: none;
-    position: fixed;
-    z-index: 10001;
-    left: 0;
-    top: 0;
+    margin: 26px auto 0;
+    padding: 30px 24px;
+    max-width: 620px;
     width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.75);
+    border-radius: 14px;
+    background: rgba(0, 0, 0, 0.85);
     cursor: pointer;
+    text-align: center;
 }}
 
 .chewie-overlay.show {{
     display: flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
 }}
@@ -1992,11 +1343,8 @@ body {{
 }}
 
 .chewie-photo {{
-    display: block;
     max-width: 320px;
     max-height: 60vh;
-    width: auto;
-    height: auto;
     object-fit: contain;
     border-radius: 14px;
     border: 4px solid #d8b878;
@@ -2005,23 +1353,10 @@ body {{
 }}
 
 @keyframes chewiePopIn {{
-    0% {{
-        transform: scale(0) rotate(-20deg);
-        opacity: 0;
-    }}
-
-    55% {{
-        transform: scale(1.2) rotate(10deg);
-        opacity: 1;
-    }}
-
-    75% {{
-        transform: scale(0.92) rotate(-5deg);
-    }}
-
-    100% {{
-        transform: scale(1) rotate(0deg);
-    }}
+    0% {{ transform: scale(0) rotate(-20deg); opacity: 0; }}
+    55% {{ transform: scale(1.2) rotate(10deg); opacity: 1; }}
+    75% {{ transform: scale(0.92) rotate(-5deg); }}
+    100% {{ transform: scale(1) rotate(0deg); }}
 }}
 
 .chewie-caption {{
@@ -2035,13 +1370,8 @@ body {{
 }}
 
 @keyframes chewieWiggle {{
-    0%, 100% {{
-        transform: rotate(-2deg);
-    }}
-
-    50% {{
-        transform: rotate(2deg);
-    }}
+    0%, 100% {{ transform: rotate(-2deg); }}
+    50% {{ transform: rotate(2deg); }}
 }}
 
 .chewie-hint {{
@@ -2059,9 +1389,7 @@ body {{
 <div id="app" tabindex="0">
 
     <div id="status">
-        <div id="feedback">
-            Click the board below, then guess the 5-letter word.
-        </div>
+        <div id="feedback">Click the board below, then guess the 5-letter word.</div>
     </div>
 
     <div id="grid"></div>
@@ -2069,262 +1397,100 @@ body {{
     <div id="keyboard"></div>
 
     <div id="unlockBox">
-
-        <div class="unlock-title">
-            PUZZLE I — SOLVED
-        </div>
-
+        <div class="unlock-title">PUZZLE I — SOLVED</div>
         <div class="unlock-lore">
-
-            <p>
-                Welcome to Spine. We, the literature club of Plaksha
-                University, call ourselves The Spine. Just like the spine
-                of a novel binds the pages together, we hold together the
-                literature culture in Plaksha.
-            </p>
-
-            <p>
-                The name is inspired from a quote by Vladimir Nabokov,
-                who says in his novel "Lectures on Literature", "A wise
-                reader reads the book of genius not with his heart, not so
-                much with his brain, but with his spine." He proceeds to
-                not elaborate on this metaphor at all.
-            </p>
-
+            <p>Welcome to Spine. We, the literature club of Plaksha
+            University, call ourselves The Spine. Just like the spine
+            of a novel binds the pages together, we hold together the
+            literature culture in Plaksha.</p>
+            <p>The name is inspired from a quote by Vladimir Nabokov,
+            who says in his novel "Lectures on Literature", "A wise
+            reader reads the book of genius not with his heart, not so
+            much with his brain, but with his spine." He proceeds to
+            not elaborate on this metaphor at all.</p>
         </div>
-
-        <button class="cta-button" id="toPuzzle2Btn">
-            Take me to puzzle 2
-        </button>
-
+        <button class="cta-button" id="toPuzzle2Btn">Take me to puzzle 2</button>
     </div>
 
-
     <div id="qrBox">
-
         {QR_IMAGE_HTML}
-
         <div class="qr-caption">
             Here's the link to our Instagram. Follow, for it will also
             help you in the puzzles going forward.
         </div>
-
-        <button class="cta-button" id="toCrosswordBtn">
-            Continue to Puzzle II
-        </button>
-
+        <button class="cta-button" id="toCrosswordBtn">Continue to Puzzle II</button>
     </div>
-
 
     <div id="crosswordBox">
-
-        <div class="xword-title">
-            Puzzle II: The Crossword
-        </div>
-
+        <div class="xword-title">Puzzle II: The Crossword</div>
         <div class="xword-layout">
-
             <div class="xword-grid" id="xwordGrid"></div>
-
             <div class="clue-cols">
-
                 <div class="clue-col">
-
-                    <div class="clue-title">
-                        Across
-                    </div>
-
+                    <div class="clue-title">Across</div>
                     <ul class="clue-list" id="acrossClues"></ul>
-
                 </div>
-
                 <div class="clue-col">
-
-                    <div class="clue-title">
-                        Down
-                    </div>
-
+                    <div class="clue-title">Down</div>
                     <ul class="clue-list" id="downClues"></ul>
-
                 </div>
-
             </div>
-
         </div>
-
-        <div
-            id="xwordFeedback"
-            style="margin-top:14px; font-weight:bold;"
-        ></div>
-
-        <button class="cta-button" id="checkCrosswordBtn">
-            Check Crossword
-        </button>
-
+        <div id="xwordFeedback" style="margin-top:14px; font-weight:bold;"></div>
+        <button class="cta-button" id="checkCrosswordBtn">Check Crossword</button>
     </div>
-
 
     <div id="foundersBox">
-
-        <div class="xword-title">
-            The Founding Members
-        </div>
-
+        <div class="xword-title">The Founding Members</div>
         <div class="founders-lore">
-
-            <p>
-                The following are the founding members of The Spine.
-                Without any of them, the heart and soul of the club remains
-                missing. They began the club, and did writing circles before
-                the club was even solidified. As UG28 joined, we have only
-                elaborated from the ground work that they set. These people
-                are also (completely unrelated) extremely smart.
-                [this was written by Avani]
-            </p>
-
+            <p>The following are the founding members of The Spine. Without any of them, the heart and soul of the club remains missing. They began the club, and did writing circles before the club was even solidified. As UG28 joined, we have only elaborated from the ground work that they set. These people are also (completely unrelated) extremely smart. [this was written by Avani]</p>
         </div>
-
+        
         <div class="founders-grid">
-
             <div class="founder-card">
-
-                <div class="founder-name">
-                    Maanal Gauri
-                    <span class="founder-batch">UG25</span>
-                </div>
-
+                <div class="founder-name">Maanal Gauri <span class="founder-batch">UG25</span></div>
                 <div class="founder-photos">
-
-                    <img
-                        src="{founder_photos['maanal'][0]}"
-                        class="founder-photo"
-                        onclick="openLightbox('maanal', 0)"
-                        alt="Maanal Gauri 1"
-                    >
-
-                    <img
-                        src="{founder_photos['maanal'][1]}"
-                        class="founder-photo"
-                        onclick="openLightbox('maanal', 1)"
-                        alt="Maanal Gauri 2"
-                    >
-
-                    <img
-                        src="{founder_photos['maanal'][2]}"
-                        class="founder-photo"
-                        onclick="openLightbox('maanal', 2)"
-                        alt="Maanal Gauri 3"
-                    >
-
+                    <img src="{founder_photos['maanal'][0]}" class="founder-photo" onclick="openLightbox('maanal', 0)" alt="Maanal Gauri 1">
+                    <img src="{founder_photos['maanal'][1]}" class="founder-photo" onclick="openLightbox('maanal', 1)" alt="Maanal Gauri 2">
+                    <img src="{founder_photos['maanal'][2]}" class="founder-photo" onclick="openLightbox('maanal', 2)" alt="Maanal Gauri 3">
                 </div>
-
             </div>
 
-
             <div class="founder-card">
-
-                <div class="founder-name">
-                    Aman Paliwal
-                    <span class="founder-batch">UG26</span>
-                </div>
-
+                <div class="founder-name">Aman Paliwal <span class="founder-batch">UG26</span></div>
                 <div class="founder-photos">
-
-                    <img
-                        src="{founder_photos['aman'][0]}"
-                        class="founder-photo"
-                        onclick="openLightbox('aman', 0)"
-                        alt="Aman Paliwal 1"
-                    >
-
-                    <img
-                        src="{founder_photos['aman'][1]}"
-                        class="founder-photo"
-                        onclick="openLightbox('aman', 1)"
-                        alt="Aman Paliwal 2"
-                    >
-
-                    <img
-                        src="{founder_photos['aman'][2]}"
-                        class="founder-photo"
-                        onclick="openLightbox('aman', 2)"
-                        alt="Aman Paliwal 3"
-                    >
-
+                    <img src="{founder_photos['aman'][0]}" class="founder-photo" onclick="openLightbox('aman', 0)" alt="Aman Paliwal 1">
+                    <img src="{founder_photos['aman'][1]}" class="founder-photo" onclick="openLightbox('aman', 1)" alt="Aman Paliwal 2">
+                    <img src="{founder_photos['aman'][2]}" class="founder-photo" onclick="openLightbox('aman', 2)" alt="Aman Paliwal 3">
                 </div>
-
             </div>
 
-
             <div class="founder-card">
-
-                <div class="founder-name">
-                    Trinav Talukdar
-                    <span class="founder-batch">UG27</span>
-                </div>
-
+                <div class="founder-name">Trinav Talukdar <span class="founder-batch">UG27</span></div>
                 <div class="founder-photos">
-
-                    <img
-                        src="{founder_photos['trinav'][0]}"
-                        class="founder-photo"
-                        onclick="openLightbox('trinav', 0)"
-                        alt="Trinav Talukdar 1"
-                    >
-
-                    <img
-                        src="{founder_photos['trinav'][1]}"
-                        class="founder-photo"
-                        onclick="openLightbox('trinav', 1)"
-                        alt="Trinav Talukdar 2"
-                    >
-
-                    <img
-                        src="{founder_photos['trinav'][2]}"
-                        class="founder-photo"
-                        onclick="openLightbox('trinav', 2)"
-                        alt="Trinav Talukdar 3"
-                    >
-
+                    <img src="{founder_photos['trinav'][0]}" class="founder-photo" onclick="openLightbox('trinav', 0)" alt="Trinav Talukdar 1">
+                    <img src="{founder_photos['trinav'][1]}" class="founder-photo" onclick="openLightbox('trinav', 1)" alt="Trinav Talukdar 2">
+                    <img src="{founder_photos['trinav'][2]}" class="founder-photo" onclick="openLightbox('trinav', 2)" alt="Trinav Talukdar 3">
                 </div>
-
             </div>
-
         </div>
 
-        <button class="cta-button" id="toPuzzle3Btn">
-            Take me to puzzle 3
-        </button>
-
+        <button class="cta-button" id="toPuzzle3Btn">Take me to puzzle 3</button>
     </div>
-
 
     <div id="pianoBox">
 
-        <div class="xword-title">
-            Puzzle III: The Melody
-        </div>
+        <div class="xword-title">Puzzle III: The Melody</div>
 
         <div class="unlock-lore" style="margin-bottom:18px;">
-
-            <p>
-                Play the secret melody of the ballad as your final challenge!
-                Play the sequence using the <b>letter keys A–Y</b> or click the
-                piano keys. The piano covers every note from <b>C#2 to C#4</b>.
-            </p>
-
-            <p>
-                <b>Click anywhere on the piano first</b> to activate the
-                computer-keyboard controls.
-            </p>
-
-            <p>
-                <b>Beware:</b> If you play even one wrong note, the sequence
-                will restart from the beginning.
-            </p>
-
+            <p>Play the secret melody of the ballad as your final challenge!
+            Play the sequence using the <b>letter keys A–Y</b> or click the
+            piano keys. The piano covers every note from <b>C#2 to C#4</b>.</p>
+            <p><b>Click anywhere on the piano first</b> to activate the
+            computer-keyboard controls.</p>
+            <p><b>Beware:</b> If you play even one wrong note, the sequence
+            will restart from the beginning.</p>
         </div>
-
 
         <div id="pianoApp" tabindex="0">
 
@@ -2345,7 +1511,6 @@ body {{
 
             </div>
 
-
             <div class="piano-wrapper" id="pianoWrapper">
 
                 <div class="piano" id="piano">
@@ -2358,7 +1523,6 @@ body {{
 
             </div>
 
-
             <div id="sequence">
 
                 <div class="sequence-title">
@@ -2368,7 +1532,6 @@ body {{
                 <div id="targetSequence"></div>
 
             </div>
-
 
             <div id="acceptanceLetter" class="locked">
 
@@ -2383,7 +1546,6 @@ body {{
                     </small>
 
                 </div>
-
 
                 <div id="letterContent" style="display:none;">
 
@@ -2420,86 +1582,23 @@ body {{
 
     </div>
 
-
-    <!-- LIGHTBOX -->
-
-    <div
-        id="lightbox"
-        class="lightbox"
-        onclick="closeLightbox(event)"
-    >
-
-        <span
-            class="lightbox-close"
-            onclick="closeLightbox()"
-        >
-            &times;
-        </span>
-
-        <button
-            class="lightbox-nav lightbox-prev"
-            onclick="prevPhoto(event)"
-        >
-            &#10094;
-        </button>
-
-        <img
-            class="lightbox-image"
-            id="lightboxImage"
-            src=""
-            alt=""
-        >
-
-        <button
-            class="lightbox-nav lightbox-next"
-            onclick="nextPhoto(event)"
-        >
-            &#10095;
-        </button>
-
-        <div
-            class="lightbox-counter"
-            id="lightboxCounter"
-        ></div>
-
+    <div id="lightbox" class="lightbox" onclick="closeLightbox(event)">
+        <span class="lightbox-close" onclick="closeLightbox()">&times;</span>
+        <button class="lightbox-nav lightbox-prev" onclick="prevPhoto(event)">&#10094;</button>
+        <img class="lightbox-image" id="lightboxImage" src="" alt="">
+        <button class="lightbox-nav lightbox-next" onclick="nextPhoto(event)">&#10095;</button>
+        <div class="lightbox-counter" id="lightboxCounter"></div>
     </div>
 
-
-    <!-- CHEWIE EASTER EGG -->
-
-    <div
-        id="chewieOverlay"
-        class="chewie-overlay"
-        onclick="closeChewie(event)"
-    >
-
-        <div
-            class="chewie-card"
-            onclick="event.stopPropagation()"
-        >
-
-            <img
-                id="chewieImg"
-                class="chewie-photo"
-                src="{CHEWIE_IMAGE_URI}"
-                alt="Chewie"
-            >
-
-            <div class="chewie-caption">
-                🎉 CHEWIE APPROVES! 🎉
-            </div>
-
-            <div class="chewie-hint">
-                (tap anywhere to dismiss)
-            </div>
-
+    <div id="chewieOverlay" class="chewie-overlay" onclick="closeChewie()">
+        <div class="chewie-card">
+            <img id="chewieImg" class="chewie-photo" src="" alt="Chewie">
+            <div class="chewie-caption">🎉 CHEWIE APPROVES! 🎉</div>
+            <div class="chewie-hint">(tap anywhere to dismiss)</div>
         </div>
-
     </div>
-
 
 </div>
-
 
 <script>
 
@@ -2523,7 +1622,6 @@ const keyStatus = {{}};
 
 const rows = [];
 
-
 function buildGrid() {{
 
     for (let r = 0; r < MAX_TRIES; r++) {{
@@ -2537,7 +1635,6 @@ function buildGrid() {{
 
             const tile = document.createElement("div");
             tile.className = "tile";
-
             rowEl.appendChild(tile);
             tileEls.push(tile);
 
@@ -2550,7 +1647,6 @@ function buildGrid() {{
 
 }}
 
-
 const kbLayout = [
     ["Q","W","E","R","T","Y","U","I","O","P"],
     ["A","S","D","F","G","H","J","K","L"],
@@ -2558,7 +1654,6 @@ const kbLayout = [
 ];
 
 const kbKeyEls = {{}};
-
 
 function buildKeyboard() {{
 
@@ -2571,21 +1666,13 @@ function buildKeyboard() {{
 
             const btn = document.createElement("button");
             btn.className = "kb-key";
-
-            btn.textContent =
-                (k === "BACK")
-                    ? "⌫"
-                    : (k === "ENTER" ? "Enter" : k);
+            btn.textContent = (k === "BACK") ? "⌫" : (k === "ENTER" ? "Enter" : k);
 
             if (k === "ENTER" || k === "BACK") {{
                 btn.classList.add("wide");
             }}
 
-            btn.addEventListener(
-                "click",
-                () => handleKey(k)
-            );
-
+            btn.addEventListener("click", () => handleKey(k));
             rowEl.appendChild(btn);
 
             if (k !== "ENTER" && k !== "BACK") {{
@@ -2600,16 +1687,13 @@ function buildKeyboard() {{
 
 }}
 
-
 function currentRowIndex() {{
     return guesses.length;
 }}
 
-
 function renderCurrentGuess() {{
 
     const rowIdx = currentRowIndex();
-
     if (rowIdx >= MAX_TRIES) return;
 
     const tiles = rows[rowIdx];
@@ -2617,7 +1701,6 @@ function renderCurrentGuess() {{
     for (let i = 0; i < WORD_LEN; i++) {{
 
         const letter = currentGuess[i] || "";
-
         tiles[i].textContent = letter;
 
         if (letter) {{
@@ -2630,7 +1713,6 @@ function renderCurrentGuess() {{
 
 }}
 
-
 function evaluateGuess(guess) {{
 
     const result = new Array(WORD_LEN).fill("absent");
@@ -2639,12 +1721,10 @@ function evaluateGuess(guess) {{
     const used = new Array(WORD_LEN).fill(false);
 
     for (let i = 0; i < WORD_LEN; i++) {{
-
         if (guessArr[i] === answerArr[i]) {{
             result[i] = "correct";
             used[i] = true;
         }}
-
     }}
 
     for (let i = 0; i < WORD_LEN; i++) {{
@@ -2654,10 +1734,8 @@ function evaluateGuess(guess) {{
         for (let j = 0; j < WORD_LEN; j++) {{
 
             if (!used[j] && guessArr[i] === answerArr[j]) {{
-
                 result[i] = "present";
                 used[j] = true;
-
                 break;
             }}
 
@@ -2669,38 +1747,21 @@ function evaluateGuess(guess) {{
 
 }}
 
-
 function updateKeyStatus(letter, status) {{
 
-    const rank = {{
-        "absent": 0,
-        "present": 1,
-        "correct": 2
-    }};
+    const rank = {{ "absent": 0, "present": 1, "correct": 2 }};
 
-    if (
-        !(letter in keyStatus) ||
-        rank[status] > rank[keyStatus[letter]]
-    ) {{
+    if (!(letter in keyStatus) || rank[status] > rank[keyStatus[letter]]) {{
         keyStatus[letter] = status;
     }}
 
     const btn = kbKeyEls[letter];
-
     if (!btn) return;
 
-    btn.classList.remove(
-        "correct",
-        "present",
-        "absent"
-    );
-
-    btn.classList.add(
-        keyStatus[letter]
-    );
+    btn.classList.remove("correct", "present", "absent");
+    btn.classList.add(keyStatus[letter]);
 
 }}
-
 
 function submitGuess() {{
 
@@ -2709,10 +1770,7 @@ function submitGuess() {{
     if (currentGuess.length !== WORD_LEN) {{
 
         shakeRow(currentRowIndex());
-
-        feedbackEl.innerHTML =
-            '<span class="error">Not enough letters.</span>';
-
+        feedbackEl.innerHTML = '<span class="error">Not enough letters.</span>';
         return;
 
     }}
@@ -2727,18 +1785,11 @@ function submitGuess() {{
 
             tile.classList.add(result[i]);
             tile.classList.add("pop");
-
-            setTimeout(
-                () => tile.classList.remove("pop"),
-                150
-            );
+            setTimeout(() => tile.classList.remove("pop"), 150);
 
         }}, i * 120);
 
-        updateKeyStatus(
-            currentGuess[i],
-            result[i]
-        );
+        updateKeyStatus(currentGuess[i], result[i]);
 
     }});
 
@@ -2751,33 +1802,20 @@ function submitGuess() {{
 
         setTimeout(() => {{
 
-            feedbackEl.innerHTML =
-                '<span class="success">FLAWLESS! The word was ' +
-                ANSWER +
-                '.</span>';
-
+            feedbackEl.innerHTML = '<span class="success">FLAWLESS! The word was ' + ANSWER + '.</span>';
             unlockBox.classList.add("show");
 
             if (window.confetti) {{
-
                 confetti({{
                     particleCount: 160,
                     spread: 90,
                     origin: {{ y: 0.5 }},
-                    colors: [
-                        "#d8b878",
-                        "#f0e4cf",
-                        "#6d8a5b",
-                        "#c4a04a"
-                    ]
+                    colors: ["#d8b878", "#f0e4cf", "#6d8a5b", "#c4a04a"]
                 }});
-
             }}
 
             window.parent.postMessage(
-                {{
-                    type: "STREAMLIT_WORDLE_PASSED"
-                }},
+                {{ type: "STREAMLIT_WORDLE_PASSED" }},
                 "*"
             );
 
@@ -2791,10 +1829,7 @@ function submitGuess() {{
 
         setTimeout(() => {{
 
-            feedbackEl.innerHTML =
-                '<span class="error">Out of tries. The word was ' +
-                ANSWER +
-                '.</span>';
+            feedbackEl.innerHTML = '<span class="error">Out of tries. The word was ' + ANSWER + '.</span>';
 
         }}, WORD_LEN * 120 + 200);
 
@@ -2803,10 +1838,7 @@ function submitGuess() {{
     else {{
 
         setTimeout(() => {{
-
-            feedbackEl.textContent =
-                "Keep guessing.";
-
+            feedbackEl.textContent = "Keep guessing.";
         }}, WORD_LEN * 120 + 200);
 
     }}
@@ -2815,24 +1847,16 @@ function submitGuess() {{
 
 }}
 
-
 function shakeRow(rowIdx) {{
 
     const tiles = rows[rowIdx];
 
     tiles.forEach(tile => {{
-
         tile.classList.add("shake");
-
-        setTimeout(
-            () => tile.classList.remove("shake"),
-            350
-        );
-
+        setTimeout(() => tile.classList.remove("shake"), 350);
     }});
 
 }}
-
 
 function handleKey(key) {{
 
@@ -2844,100 +1868,65 @@ function handleKey(key) {{
     }}
 
     if (key === "BACK") {{
-
-        currentGuess =
-            currentGuess.slice(0, -1);
-
+        currentGuess = currentGuess.slice(0, -1);
         renderCurrentGuess();
-
         return;
     }}
 
-    if (
-        /^[A-Z]$/.test(key) &&
-        currentGuess.length < WORD_LEN
-    ) {{
-
+    if (/^[A-Z]$/.test(key) && currentGuess.length < WORD_LEN) {{
         currentGuess += key;
         renderCurrentGuess();
-
     }}
 
 }}
-
 
 function activateKeyboard() {{
 
-    document
-        .getElementById("app")
-        .focus();
+    document.getElementById("app").focus();
 
 }}
 
-
 document
     .getElementById("app")
-    .addEventListener(
-        "mousedown",
-        activateKeyboard
-    );
+    .addEventListener("mousedown", activateKeyboard);
 
+document.addEventListener("keydown", (event) => {{
 
-document.addEventListener(
-    "keydown",
-    (event) => {{
+    if (locked) return;
 
-        if (locked) return;
+    const key = event.key.toUpperCase();
 
-        const key =
-            event.key.toUpperCase();
-
-        if (key === "ENTER") {{
-
-            event.preventDefault();
-
-            handleKey("ENTER");
-
-            return;
-        }}
-
-        if (key === "BACKSPACE") {{
-
-            event.preventDefault();
-
-            handleKey("BACK");
-
-            return;
-        }}
-
-        if (/^[A-Z]$/.test(key)) {{
-            handleKey(key);
-        }}
-
+    if (key === "ENTER") {{
+        event.preventDefault();
+        handleKey("ENTER");
+        return;
     }}
-);
 
+    if (key === "BACKSPACE") {{
+        event.preventDefault();
+        handleKey("BACK");
+        return;
+    }}
+
+    if (/^[A-Z]$/.test(key)) {{
+        handleKey(key);
+    }}
+
+}});
 
 buildGrid();
 buildKeyboard();
 
-
-/* ============================================================
-   CROSSWORD
-   ============================================================ */
+/* ============= Crossword Setup ============= */
 
 let xwordBuilt = false;
 let xwordSolved = false;
 let xwordCurrentDir = "A";
-
 const xwordCellEls = [];
 const xwordCellWords = [];
 
-
 function buildCrossword() {{
-
     if (xwordBuilt) return;
-
     xwordBuilt = true;
 
     const grid = CROSSWORD_DATA.grid;
@@ -2945,490 +1934,231 @@ function buildCrossword() {{
     const cols = CROSSWORD_DATA.cols;
 
     for (let r = 0; r < rows; r++) {{
-
-        xwordCellEls.push(
-            new Array(cols).fill(null)
-        );
-
+        xwordCellEls.push(new Array(cols).fill(null));
         xwordCellWords.push(
-            new Array(cols)
-                .fill(null)
-                .map(() => ({{ A: null, D: null }}))
+            new Array(cols).fill(null).map(() => ({{ A: null, D: null }}))
         );
-
     }}
 
+    // Use the explicit clue numbers from CROSSWORD_DATA.
+    // Do not generate numbers from grid position, because the clue
+    // numbers are part of the puzzle itself.
     const numMap = {{}};
 
-    Object.keys(
-        CROSSWORD_DATA.clues
-    ).forEach(dir => {{
-
-        CROSSWORD_DATA.clues[dir]
-            .forEach(clue => {{
-
-                numMap[
-                    clue.row + "_" + clue.col
-                ] = clue.num;
-
-            }});
-
+    Object.keys(CROSSWORD_DATA.clues).forEach(dir => {{
+        CROSSWORD_DATA.clues[dir].forEach(clue => {{
+            numMap[clue.row + "_" + clue.col] = clue.num;
+        }});
     }});
 
+    // Assign word indices to cells.
     const clues = CROSSWORD_DATA.clues;
 
-
     clues.across.forEach((clue, idx) => {{
-
         const r = clue.row;
         const c = clue.col;
 
         for (let i = 0; i < clue.length; i++) {{
-
             if (
-                r >= 0 &&
-                r < rows &&
-                c + i >= 0 &&
-                c + i < cols &&
+                r >= 0 && r < rows &&
+                c + i >= 0 && c + i < cols &&
                 grid[r][c + i] !== null
             ) {{
-
                 xwordCellWords[r][c + i].A = idx;
-
             }}
-
         }}
-
     }});
 
-
     clues.down.forEach((clue, idx) => {{
-
         const r = clue.row;
         const c = clue.col;
 
         for (let i = 0; i < clue.length; i++) {{
-
             if (
-                r + i >= 0 &&
-                r + i < rows &&
-                c >= 0 &&
-                c < cols &&
+                r + i >= 0 && r + i < rows &&
+                c >= 0 && c < cols &&
                 grid[r + i][c] !== null
             ) {{
-
                 xwordCellWords[r + i][c].D = idx;
-
             }}
-
         }}
-
     }});
 
-
-    const gridEl =
-        document.getElementById(
-            "xwordGrid"
-        );
-
-    gridEl.style.gridTemplateColumns =
-        "repeat(" + cols + ", 30px)";
-
-    gridEl.style.gridTemplateRows =
-        "repeat(" + rows + ", 30px)";
-
+    // Render grid.
+    const gridEl = document.getElementById("xwordGrid");
+    gridEl.style.gridTemplateColumns = "repeat(" + cols + ", 30px)";
+    gridEl.style.gridTemplateRows = "repeat(" + rows + ", 30px)";
 
     for (let r = 0; r < rows; r++) {{
-
         for (let c = 0; c < cols; c++) {{
 
-            const cellWrap =
-                document.createElement("div");
-
-            cellWrap.className =
-                "xword-cell";
-
+            const cellWrap = document.createElement("div");
+            cellWrap.className = "xword-cell";
 
             if (grid[r][c] === null) {{
-
-                cellWrap.classList.add(
-                    "blocked"
-                );
-
-                gridEl.appendChild(
-                    cellWrap
-                );
-
+                cellWrap.classList.add("blocked");
+                gridEl.appendChild(cellWrap);
                 continue;
             }}
 
-
-            const key =
-                r + "_" + c;
-
+            const key = r + "_" + c;
 
             if (numMap[key]) {{
-
-                const numEl =
-                    document.createElement(
-                        "span"
-                    );
-
-                numEl.className =
-                    "xword-num";
-
-                numEl.textContent =
-                    numMap[key];
-
-                cellWrap.appendChild(
-                    numEl
-                );
-
+                const numEl = document.createElement("span");
+                numEl.className = "xword-num";
+                numEl.textContent = numMap[key];
+                cellWrap.appendChild(numEl);
             }}
 
-
-            const input =
-                document.createElement(
-                    "input"
-                );
-
+            const input = document.createElement("input");
             input.maxLength = 1;
-
             input.dataset.row = r;
             input.dataset.col = c;
-
             input.autocomplete = "off";
 
+            input.addEventListener("focus", () => setActiveCell(r, c));
 
-            input.addEventListener(
-                "focus",
-                () => setActiveCell(r, c)
-            );
+            input.addEventListener("click", () => {{
+                const cellInfo = xwordCellWords[r][c];
 
-
-            input.addEventListener(
-                "click",
-                () => {{
-
-                    const cellInfo =
-                        xwordCellWords[r][c];
-
-                    if (
-                        cellInfo.A !== null &&
-                        cellInfo.D !== null
-                    ) {{
-
-                        xwordCurrentDir =
-                            xwordCurrentDir === "A"
-                                ? "D"
-                                : "A";
-
-                    }} else if (
-                        cellInfo.A !== null
-                    ) {{
-
-                        xwordCurrentDir = "A";
-
-                    }} else if (
-                        cellInfo.D !== null
-                    ) {{
-
-                        xwordCurrentDir = "D";
-
-                    }}
-
-                    setActiveCell(r, c);
-
+                if (cellInfo.A !== null && cellInfo.D !== null) {{
+                    xwordCurrentDir = (xwordCurrentDir === "A") ? "D" : "A";
+                }} else if (cellInfo.A !== null) {{
+                    xwordCurrentDir = "A";
+                }} else if (cellInfo.D !== null) {{
+                    xwordCurrentDir = "D";
                 }}
-            );
 
+                setActiveCell(r, c);
+            }});
 
-            input.addEventListener(
-                "keydown",
-                (e) =>
-                    onXwordKeydown(e, r, c)
-            );
-
-
-            input.addEventListener(
-                "input",
-                (e) =>
-                    onXwordInput(e, r, c)
-            );
-
+            input.addEventListener("keydown", (e) => onXwordKeydown(e, r, c));
+            input.addEventListener("input", (e) => onXwordInput(e, r, c));
 
             cellWrap.appendChild(input);
-
             gridEl.appendChild(cellWrap);
-
-            xwordCellEls[r][c] =
-                input;
-
+            xwordCellEls[r][c] = input;
         }}
-
     }}
 
-
     renderClues();
-
-    document
-        .getElementById(
-            "checkCrosswordBtn"
-        )
-        .addEventListener(
-            "click",
-            checkCrossword
-        );
-
+    document.getElementById("checkCrosswordBtn").addEventListener("click", checkCrossword);
 }}
 
-
 function renderClues() {{
-
-    const acrossCluesEl =
-        document.getElementById(
-            "acrossClues"
-        );
-
-    const downCluesEl =
-        document.getElementById(
-            "downClues"
-        );
+    const acrossCluesEl = document.getElementById("acrossClues");
+    const downCluesEl = document.getElementById("downClues");
 
     acrossCluesEl.innerHTML = "";
     downCluesEl.innerHTML = "";
 
+    CROSSWORD_DATA.clues.across.forEach((clue, idx) => {{
+        const li = document.createElement("li");
+        li.className = "clue-item";
+        li.dataset.num = clue.num;
+        li.dataset.dir = "A";
+        li.dataset.idx = idx;
 
-    CROSSWORD_DATA.clues.across
-        .forEach((clue, idx) => {{
+        li.innerHTML =
+            `<span class="clue-num">${{clue.num}}.</span> ` +
+            `${{clue.clue}} ` +
+            `<span class="clue-len">(${{clue.length}})</span>`;
 
-            const li =
-                document.createElement("li");
+        li.addEventListener("click", () => jumpToClue("A", idx));
+        acrossCluesEl.appendChild(li);
+    }});
 
-            li.className =
-                "clue-item";
+    CROSSWORD_DATA.clues.down.forEach((clue, idx) => {{
+        const li = document.createElement("li");
+        li.className = "clue-item";
+        li.dataset.num = clue.num;
+        li.dataset.dir = "D";
+        li.dataset.idx = idx;
 
-            li.dataset.num =
-                clue.num;
+        li.innerHTML =
+            `<span class="clue-num">${{clue.num}}.</span> ` +
+            `${{clue.clue}} ` +
+            `<span class="clue-len">(${{clue.length}})</span>`;
 
-            li.dataset.dir =
-                "A";
-
-            li.dataset.idx =
-                idx;
-
-            li.innerHTML =
-                `<span class="clue-num">${{clue.num}}.</span> ` +
-                `${{clue.clue}} ` +
-                `<span class="clue-len">(${{clue.length}})</span>`;
-
-            li.addEventListener(
-                "click",
-                () => jumpToClue("A", idx)
-            );
-
-            acrossCluesEl.appendChild(li);
-
-        }});
-
-
-    CROSSWORD_DATA.clues.down
-        .forEach((clue, idx) => {{
-
-            const li =
-                document.createElement("li");
-
-            li.className =
-                "clue-item";
-
-            li.dataset.num =
-                clue.num;
-
-            li.dataset.dir =
-                "D";
-
-            li.dataset.idx =
-                idx;
-
-            li.innerHTML =
-                `<span class="clue-num">${{clue.num}}.</span> ` +
-                `${{clue.clue}} ` +
-                `<span class="clue-len">(${{clue.length}})</span>`;
-
-            li.addEventListener(
-                "click",
-                () => jumpToClue("D", idx)
-            );
-
-            downCluesEl.appendChild(li);
-
-        }});
-
+        li.addEventListener("click", () => jumpToClue("D", idx));
+        downCluesEl.appendChild(li);
+    }});
 }}
 
-
 function jumpToClue(dir, idx) {{
-
-    const clue =
-        CROSSWORD_DATA.clues[
-            dir === "A"
-                ? "across"
-                : "down"
-        ][idx];
+    const clue = CROSSWORD_DATA.clues[dir === "A" ? "across" : "down"][idx];
 
     xwordCurrentDir = dir;
 
-    const el =
-        xwordCellEls[
-            clue.row
-        ][
-            clue.col
-        ];
+    const el = xwordCellEls[clue.row][clue.col];
 
     if (el) el.focus();
 
-    setActiveCell(
-        clue.row,
-        clue.col
-    );
-
+    setActiveCell(clue.row, clue.col);
 }}
-
 
 function clearActiveHighlight() {{
+    document.querySelectorAll(".xword-cell input.active-word")
+        .forEach(el => el.classList.remove("active-word"));
 
-    document
-        .querySelectorAll(
-            ".xword-cell input.active-word"
-        )
-        .forEach(
-            el =>
-                el.classList.remove(
-                    "active-word"
-                )
-        );
-
-    document
-        .querySelectorAll(
-            ".clue-item.active-clue"
-        )
-        .forEach(
-            el =>
-                el.classList.remove(
-                    "active-clue"
-                )
-        );
-
+    document.querySelectorAll(".clue-item.active-clue")
+        .forEach(el => el.classList.remove("active-clue"));
 }}
 
-
 function setActiveCell(r, c) {{
-
     if (xwordSolved) return;
 
     clearActiveHighlight();
 
-    const cellInfo =
-        xwordCellWords[r][c];
+    const cellInfo = xwordCellWords[r][c];
 
-    let dir =
-        xwordCurrentDir;
-
+    let dir = xwordCurrentDir;
 
     if (cellInfo[dir] === null) {{
-
-        dir =
-            dir === "A"
-                ? "D"
-                : "A";
+        dir = (dir === "A") ? "D" : "A";
 
         if (cellInfo[dir] !== null) {{
             xwordCurrentDir = dir;
         }}
-
     }}
 
-
-    const wordIdx =
-        cellInfo[xwordCurrentDir];
+    const wordIdx = cellInfo[xwordCurrentDir];
 
     if (wordIdx === null) return;
 
-
     const clue =
         CROSSWORD_DATA.clues[
-            xwordCurrentDir === "A"
-                ? "across"
-                : "down"
+            xwordCurrentDir === "A" ? "across" : "down"
         ][wordIdx];
 
+    // Highlight exactly clue.length cells.
+    for (let k = 0; k < clue.length; k++) {{
+        const rr = xwordCurrentDir === "A" ? clue.row : clue.row + k;
+        const cc = xwordCurrentDir === "A" ? clue.col + k : clue.col;
 
-    for (
-        let k = 0;
-        k < clue.length;
-        k++
-    ) {{
-
-        const rr =
-            xwordCurrentDir === "A"
-                ? clue.row
-                : clue.row + k;
-
-        const cc =
-            xwordCurrentDir === "A"
-                ? clue.col + k
-                : clue.col;
-
-
-        if (
-            xwordCellEls[rr] &&
-            xwordCellEls[rr][cc]
-        ) {{
-
-            xwordCellEls[rr][cc]
-                .classList
-                .add("active-word");
-
+        if (xwordCellEls[rr] && xwordCellEls[rr][cc]) {{
+            xwordCellEls[rr][cc].classList.add("active-word");
         }}
-
     }}
 
+    const clueEl = document.querySelector(
+        '.clue-item[data-num="' +
+        clue.num +
+        '"][data-dir="' +
+        xwordCurrentDir +
+        '"]'
+    );
 
-    const clueEl =
-        document.querySelector(
-            '.clue-item[data-num="' +
-            clue.num +
-            '"][data-dir="' +
-            xwordCurrentDir +
-            '"]'
-        );
-
-    if (clueEl) {{
-        clueEl.classList.add(
-            "active-clue"
-        );
-    }}
-
+    if (clueEl) clueEl.classList.add("active-clue");
 }}
 
-
 function moveFocus(r, c, dir, step) {{
-
     let rr = r;
     let cc = c;
 
     while (true) {{
-
-        rr +=
-            dir === "D"
-                ? step
-                : 0;
-
-        cc +=
-            dir === "A"
-                ? step
-                : 0;
-
+        rr += (dir === "D") ? step : 0;
+        cc += (dir === "A") ? step : 0;
 
         if (
             rr < 0 ||
@@ -3439,553 +2169,248 @@ function moveFocus(r, c, dir, step) {{
             return;
         }}
 
-
         if (xwordCellEls[rr][cc]) {{
-
-            xwordCellEls[rr][cc]
-                .focus();
-
+            xwordCellEls[rr][cc].focus();
             return;
         }}
 
         return;
-
     }}
-
 }}
-
 
 function onXwordInput(e, r, c) {{
+    const val = e.target.value.toUpperCase().replace(/[^A-Z]/g, "");
 
-    const val =
-        e.target.value
-            .toUpperCase()
-            .replace(
-                /[^A-Z]/g,
-                ""
-            );
-
-    e.target.value =
-        val.slice(-1);
-
-    e.target.classList.remove(
-        "correct",
-        "wrong"
-    );
+    e.target.value = val.slice(-1);
+    e.target.classList.remove("correct", "wrong");
 
     if (val) {{
-        moveFocus(
-            r,
-            c,
-            xwordCurrentDir,
-            1
-        );
+        moveFocus(r, c, xwordCurrentDir, 1);
     }}
-
 }}
-
 
 function onXwordKeydown(e, r, c) {{
-
     if (xwordSolved) return;
 
-
     if (e.key === "Backspace") {{
-
         if (!e.target.value) {{
-
             e.preventDefault();
-
-            moveFocus(
-                r,
-                c,
-                xwordCurrentDir,
-                -1
-            );
-
+            moveFocus(r, c, xwordCurrentDir, -1);
         }}
-
         return;
     }}
-
 
     if (e.key === "ArrowRight") {{
-
         e.preventDefault();
-
         xwordCurrentDir = "A";
-
-        moveFocus(
-            r,
-            c,
-            "A",
-            1
-        );
-
+        moveFocus(r, c, "A", 1);
         return;
     }}
-
 
     if (e.key === "ArrowLeft") {{
-
         e.preventDefault();
-
         xwordCurrentDir = "A";
-
-        moveFocus(
-            r,
-            c,
-            "A",
-            -1
-        );
-
+        moveFocus(r, c, "A", -1);
         return;
     }}
-
 
     if (e.key === "ArrowDown") {{
-
         e.preventDefault();
-
         xwordCurrentDir = "D";
-
-        moveFocus(
-            r,
-            c,
-            "D",
-            1
-        );
-
+        moveFocus(r, c, "D", 1);
         return;
     }}
-
 
     if (e.key === "ArrowUp") {{
-
         e.preventDefault();
-
         xwordCurrentDir = "D";
-
-        moveFocus(
-            r,
-            c,
-            "D",
-            -1
-        );
-
+        moveFocus(r, c, "D", -1);
         return;
     }}
-
 }}
 
-
 function checkCrossword() {{
-
-    const grid =
-        CROSSWORD_DATA.grid;
+    const grid = CROSSWORD_DATA.grid;
 
     let allFilled = true;
     let allCorrect = true;
 
+    for (let r = 0; r < CROSSWORD_DATA.rows; r++) {{
+        for (let c = 0; c < CROSSWORD_DATA.cols; c++) {{
 
-    for (
-        let r = 0;
-        r < CROSSWORD_DATA.rows;
-        r++
-    ) {{
+            if (grid[r][c] === null) continue;
 
-        for (
-            let c = 0;
-            c < CROSSWORD_DATA.cols;
-            c++
-        ) {{
-
-            if (grid[r][c] === null)
-                continue;
-
-
-            const el =
-                xwordCellEls[r][c];
-
-            const val =
-                el.value.toUpperCase();
-
+            const el = xwordCellEls[r][c];
+            const val = el.value.toUpperCase();
 
             if (!val) {{
-
                 allFilled = false;
-
                 continue;
             }}
 
-
             if (val === grid[r][c]) {{
-
-                el.classList.add(
-                    "correct"
-                );
-
-                el.classList.remove(
-                    "wrong"
-                );
-
+                el.classList.add("correct");
+                el.classList.remove("wrong");
             }} else {{
-
                 allCorrect = false;
-
-                el.classList.remove(
-                    "correct"
-                );
-
-                el.classList.add(
-                    "wrong"
-                );
-
+                el.classList.remove("correct");
+                el.classList.add("wrong");
             }}
-
         }}
-
     }}
 
-
-    const feedbackEl =
-        document.getElementById(
-            "xwordFeedback"
-        );
-
+    const feedbackEl = document.getElementById("xwordFeedback");
 
     if (!allFilled) {{
-
         feedbackEl.innerHTML =
             '<span style="color:#e57373;">Fill in every cell first.</span>';
-
         return;
     }}
-
 
     if (!allCorrect) {{
-
         feedbackEl.innerHTML =
             '<span style="color:#e57373;">Some letters are off — green is correct, red is wrong.</span>';
-
         return;
     }}
 
-
     xwordSolved = true;
-
 
     feedbackEl.innerHTML =
         '<span style="color:#81c784;">FLAWLESS! Puzzle II solved.</span>';
 
-
     if (window.confetti) {{
-
         confetti({{
             particleCount: 200,
             spread: 100,
             origin: {{ y: 0.5 }},
-            colors: [
-                "#d8b878",
-                "#f0e4cf",
-                "#6d8a5b",
-                "#c4a04a"
-            ]
+            colors: ["#d8b878", "#f0e4cf", "#6d8a5b", "#c4a04a"]
         }});
-
     }}
 
-
     setTimeout(() => {{
+        document.getElementById("foundersBox").classList.add("show");
+        setTimeout(resizeFrame, 50);
 
-        document
-            .getElementById(
-                "foundersBox"
-            )
-            .classList
-            .add("show");
-
-        setTimeout(
-            resizeFrame,
-            50
-        );
-
-        document
-            .getElementById(
-                "foundersBox"
-            )
-            .scrollIntoView({{
-                behavior: "smooth",
-                block: "start"
-            }});
-
+        document.getElementById("foundersBox").scrollIntoView({{
+            behavior: "smooth",
+            block: "start"
+        }});
     }}, 1000);
 
-
     window.parent.postMessage(
-        {{
-            type:
-                "STREAMLIT_CROSSWORD_PASSED"
-        }},
+        {{ type: "STREAMLIT_CROSSWORD_PASSED" }},
         "*"
     );
+}}
 
-}
+/* ============= Lightbox for founder photos ============= */
 
-
-/* ============================================================
-   LIGHTBOX
-   ============================================================ */
-
-const lighboxPhotos =
-    {FOUNDER_PHOTOS_JSON};
+const lighboxPhotos = {FOUNDER_PHOTOS_JSON};
 
 let currentLightboxMember = null;
 let currentLightboxIndex = 0;
 
-
 function openLightbox(member, index) {{
-
     currentLightboxMember = member;
     currentLightboxIndex = index;
-
-    const lightbox =
-        document.getElementById(
-            "lightbox"
-        );
-
-    const image =
-        document.getElementById(
-            "lightboxImage"
-        );
-
-    image.src =
-        lighboxPhotos[
-            member
-        ][
-            index
-        ];
-
+    const lightbox = document.getElementById("lightbox");
+    const image = document.getElementById("lightboxImage");
+    image.src = lighboxPhotos[member][index];
     updateLightboxCounter();
-
-    lightbox.classList.add(
-        "show"
-    );
-
+    lightbox.classList.add("show");
 }}
-
 
 function closeLightbox(event) {{
-
-    if (
-        event &&
-        event.target !==
-            document.getElementById(
-                "lightbox"
-            )
-    ) {{
-        return;
-    }}
-
-    document
-        .getElementById(
-            "lightbox"
-        )
-        .classList
-        .remove("show");
-
+    if (event && event.target !== document.getElementById("lightbox")) return;
+    document.getElementById("lightbox").classList.remove("show");
 }}
-
 
 function nextPhoto(event) {{
-
     event.stopPropagation();
-
-    const photos =
-        lighboxPhotos[
-            currentLightboxMember
-        ];
-
-    currentLightboxIndex =
-        (
-            currentLightboxIndex + 1
-        ) % photos.length;
-
-    document
-        .getElementById(
-            "lightboxImage"
-        )
-        .src =
-        photos[
-            currentLightboxIndex
-        ];
-
+    const photos = lighboxPhotos[currentLightboxMember];
+    currentLightboxIndex = (currentLightboxIndex + 1) % photos.length;
+    document.getElementById("lightboxImage").src = photos[currentLightboxIndex];
     updateLightboxCounter();
-
 }}
-
 
 function prevPhoto(event) {{
-
     event.stopPropagation();
-
-    const photos =
-        lighboxPhotos[
-            currentLightboxMember
-        ];
-
-    currentLightboxIndex =
-        (
-            currentLightboxIndex -
-            1 +
-            photos.length
-        ) % photos.length;
-
-    document
-        .getElementById(
-            "lightboxImage"
-        )
-        .src =
-        photos[
-            currentLightboxIndex
-        ];
-
+    const photos = lighboxPhotos[currentLightboxMember];
+    currentLightboxIndex = (currentLightboxIndex - 1 + photos.length) % photos.length;
+    document.getElementById("lightboxImage").src = photos[currentLightboxIndex];
     updateLightboxCounter();
-
 }}
-
 
 function updateLightboxCounter() {{
-
-    document
-        .getElementById(
-            "lightboxCounter"
-        )
-        .textContent =
-        (
-            currentLightboxIndex + 1
-        ) +
-        " / " +
-        lighboxPhotos[
-            currentLightboxMember
-        ].length;
-
+    document.getElementById("lightboxCounter").textContent = 
+        (currentLightboxIndex + 1) + " / " + lighboxPhotos[currentLightboxMember].length;
 }}
 
+// Close lightbox on ESC key
+document.addEventListener("keydown", (e) => {{
+    if (e.key === "Escape") closeLightbox();
+}});
 
-document.addEventListener(
-    "keydown",
-    (e) => {{
+/* ============= Chewie easter egg ============= */
 
-        if (e.key === "Escape")
-            closeLightbox();
-
-    }}
-);
-
-
-/* ============================================================
-   CHEWIE EASTER EGG
-   ============================================================ */
+const CHEWIE_URI = {CHEWIE_URI_JSON};
 
 function triggerChewiePopup() {{
 
-    const overlay =
-        document.getElementById(
-            "chewieOverlay"
+    if (!CHEWIE_URI) {{
+        console.warn(
+            "Chewie image not found — make sure chewie.png/.jpg/.jpeg/" +
+            ".webp/.gif exists in the same folder as this script."
         );
-
-    const img =
-        document.getElementById(
-            "chewieImg"
-        );
-
-    if (!overlay || !img)
         return;
+    }}
 
+    const overlay = document.getElementById("chewieOverlay");
+    const img = document.getElementById("chewieImg");
 
-    /*
-       Restart the animation every time.
-
-       void img.offsetWidth forces the browser
-       to acknowledge the animation reset.
-    */
-
+    // Restart the pop-in animation even if it already played once.
     img.style.animation = "none";
+    img.offsetHeight;
+    img.style.animation = "";
 
-    void img.offsetWidth;
-
-    img.style.animation =
-        "chewiePopIn 0.6s cubic-bezier(.34, 1.56, .64, 1) forwards";
-
-
+    img.src = CHEWIE_URI;
     overlay.classList.add("show");
 
+    // The overlay is now visible in normal document flow (see the CSS
+    // comment above for why `position: fixed` didn't work inside this
+    // auto-resizing iframe). Resize the frame to fit the new content,
+    // then scroll it into view so the player actually sees it without
+    // having to scroll manually.
+    resizeFrame();
+
+    setTimeout(() => {{
+        overlay.scrollIntoView({{ behavior: "smooth", block: "center" }});
+    }}, 60);
 
     if (window.confetti) {{
-
         confetti({{
             particleCount: 140,
             spread: 110,
             origin: {{ y: 0.4 }},
-            colors: [
-                "#d8b878",
-                "#f0e4cf",
-                "#6d8a5b",
-                "#c4a04a"
-            ]
+            colors: ["#d8b878", "#f0e4cf", "#6d8a5b", "#c4a04a"]
         }});
-
     }}
 
 }}
 
-
-function closeChewie(event) {{
-
-    /*
-       Clicking the dark overlay closes it.
-       Clicking the actual Chewie card does not.
-    */
-
-    if (
-        event &&
-        event.target !==
-            document.getElementById(
-                "chewieOverlay"
-            )
-    ) {{
-        return;
-    }}
-
-    document
-        .getElementById(
-            "chewieOverlay"
-        )
-        .classList
-        .remove("show");
-
+function closeChewie() {{
+    document.getElementById("chewieOverlay").classList.remove("show");
+    resizeFrame();
 }}
 
+// Close chewie popup on ESC key
+document.addEventListener("keydown", (e) => {{
+    if (e.key === "Escape") closeChewie();
+}});
 
-document.addEventListener(
-    "keydown",
-    (e) => {{
+/* ============= Puzzle III: The Melody (piano) ============= */
 
-        if (e.key === "Escape") {{
-            closeChewie();
-        }}
-
-    }}
-);
-
-
-/* ============================================================
-   PUZZLE III: THE MELODY
-   ============================================================ */
-
-const melody =
-    {melody_sequence!r};
+const melody = {melody_sequence!r};
 
 const noteElements = {{}};
 const keyMap = {{}};
@@ -3998,85 +2423,65 @@ let activeOscillators = {{}};
 
 let pianoBuilt = false;
 
-
 function initAudio() {{
 
     if (!audioCtx) {{
 
         audioCtx =
-            new (
-                window.AudioContext ||
-                window.webkitAudioContext
-            )();
+            new (window.AudioContext ||
+                 window.webkitAudioContext)();
 
     }}
 
     if (audioCtx.state === "suspended") {{
+
         audioCtx.resume();
+
     }}
 
 }}
-
 
 function playTone(freq, id) {{
 
     initAudio();
 
-    const now =
-        audioCtx.currentTime;
+    const now = audioCtx.currentTime;
 
-    const oscillator =
-        audioCtx.createOscillator();
+    const oscillator = audioCtx.createOscillator();
 
-    const gain =
-        audioCtx.createGain();
+    const gain = audioCtx.createGain();
 
-
-    oscillator.type =
-        "triangle";
-
+    oscillator.type = "triangle";
 
     oscillator.frequency.setValueAtTime(
         freq,
         now
     );
 
-
     gain.gain.setValueAtTime(
         0.0001,
         now
     );
-
 
     gain.gain.exponentialRampToValueAtTime(
         0.22,
         now + 0.012
     );
 
-
     gain.gain.exponentialRampToValueAtTime(
         0.0001,
         now + 0.75
     );
 
-
     oscillator.connect(gain);
 
-    gain.connect(
-        audioCtx.destination
-    );
-
+    gain.connect(audioCtx.destination);
 
     oscillator.start(now);
 
-    oscillator.stop(
-        now + 0.8
-    );
+    oscillator.stop(now + 0.8);
 
-
-    activeOscillators[id] =
-        oscillator;
-
+    activeOscillators[id] = oscillator;
 
     setTimeout(() => {{
 
@@ -4086,128 +2491,88 @@ function playTone(freq, id) {{
 
 }}
 
-
 function renderTargetSequence() {{
 
     const container =
-        document.getElementById(
-            "targetSequence"
-        );
+        document.getElementById("targetSequence");
 
     container.innerHTML = "";
 
+    melody.forEach((note, index) => {{
 
-    melody.forEach(
-        (note, index) => {{
+        const el =
+            document.createElement("span");
 
-            const el =
-                document.createElement(
-                    "span"
-                );
+        el.className = "seq-note";
 
-            el.className =
-                "seq-note";
+        el.id = "seq-" + index;
 
-            el.id =
-                "seq-" + index;
+        el.textContent = note;
 
-            el.textContent =
-                note;
+        container.appendChild(el);
 
-            container.appendChild(
-                el
-            );
-
-        }}
-    );
-
+    }});
 
     updateTargetHighlight();
 
 }}
 
-
 function updateTargetHighlight() {{
 
-    melody.forEach(
-        (_, i) => {{
+    melody.forEach((_, i) => {{
 
-            const el =
-                document.getElementById(
-                    "seq-" + i
-                );
+        const el =
+            document.getElementById("seq-" + i);
 
-            if (!el) return;
+        if (!el) return;
 
+        el.classList.remove(
+            "current",
+            "done",
+            "wrong"
+        );
 
-            el.classList.remove(
-                "current",
-                "done",
-                "wrong"
-            );
+        if (i < playedSequence.length) {{
 
-
-            if (
-                i < playedSequence.length
-            ) {{
-
-                el.classList.add(
-                    "done"
-                );
-
-            }} else if (
-                i ===
-                playedSequence.length
-            ) {{
-
-                el.classList.add(
-                    "current"
-                );
-
-            }}
+            el.classList.add("done");
 
         }}
-    );
+
+        else if (i === playedSequence.length) {{
+
+            el.classList.add("current");
+
+        }}
+
+    }});
 
 }}
-
 
 function flashKey(el) {{
 
-    el.classList.add(
-        "active"
-    );
+    el.classList.add("active");
 
-    setTimeout(
-        () =>
-            el.classList.remove(
-                "active"
-            ),
-        130
-    );
+    setTimeout(() => {{
+
+        el.classList.remove("active");
+
+    }}, 130);
 
 }}
 
-
 function updatePlayedDisplay() {{
 
-    document
-        .getElementById(
-            "playedNotes"
-        )
-        .textContent =
+    document.getElementById("playedNotes").textContent =
+
         playedSequence.length
+
             ? playedSequence.join(" → ")
+
             : "None";
 
 }}
 
-
-function handleNotePlay(
-    note,
-    freq,
-    element
-) {{
+function handleNotePlay(note, freq, element) {{
 
     initAudio();
 
@@ -4218,88 +2583,53 @@ function handleNotePlay(
         note + Date.now()
     );
 
-
     const expected =
-        melody[
-            playedSequence.length
-        ];
-
+        melody[playedSequence.length];
 
     if (note === expected) {{
 
-        playedSequence.push(
-            note
-        );
+        playedSequence.push(note);
 
         updatePlayedDisplay();
 
         updateTargetHighlight();
-
 
         if (
             playedSequence.length ===
             melody.length
         ) {{
 
-            document
-                .getElementById(
-                    "pianoFeedback"
-                )
-                .innerHTML =
+            document.getElementById("pianoFeedback").innerHTML =
+
                 '<span class="success">' +
                 'FLAWLESS! Challenge passed!' +
                 '</span>';
-
 
             const letter =
                 document.getElementById(
                     "acceptanceLetter"
                 );
 
+            letter.classList.remove("locked");
 
-            letter.classList.remove(
-                "locked"
-            );
+            letter.classList.add("unlocked");
 
-            letter.classList.add(
-                "unlocked"
-            );
+            document.getElementById(
+                "letterLockedMessage"
+            ).style.display = "none";
 
-
-            document
-                .getElementById(
-                    "letterLockedMessage"
-                )
-                .style.display =
-                "none";
-
-
-            document
-                .getElementById(
-                    "letterContent"
-                )
-                .style.display =
-                "block";
-
+            document.getElementById(
+                "letterContent"
+            ).style.display = "block";
 
             updateLetterPreview();
 
-
             window.parent.postMessage(
                 {{
-                    type:
-                        "STREAMLIT_PIANO_PASSED"
+                    type: "STREAMLIT_PIANO_PASSED"
                 }},
                 "*"
             );
-
-
-            /*
-             * CHEWIE POPUP
-             *
-             * This happens only after the entire
-             * melody has been correctly completed.
-             */
 
             triggerChewiePopup();
 
@@ -4307,11 +2637,9 @@ function handleNotePlay(
 
         else {{
 
-            document
-                .getElementById(
-                    "pianoFeedback"
-                )
-                .textContent =
+            document.getElementById(
+                "pianoFeedback"
+            ).textContent =
                 "Correct — keep going!";
 
         }}
@@ -4326,41 +2654,30 @@ function handleNotePlay(
 
         updateTargetHighlight();
 
+        document.getElementById(
+            "pianoFeedback"
+        ).innerHTML =
 
-        document
-            .getElementById(
-                "pianoFeedback"
-            )
-            .innerHTML =
             '<span class="error">' +
             'Wrong note! The sequence has ' +
             'restarted from the beginning.' +
             '</span>';
 
+        element.classList.add("wrong");
 
-        element.classList.add(
-            "wrong"
-        );
+        setTimeout(() => {{
 
+            element.classList.remove("wrong");
 
-        setTimeout(
-            () =>
-                element.classList.remove(
-                    "wrong"
-                ),
-            500
-        );
-
+        }}, 500);
 
         setTimeout(() => {{
 
             updateTargetHighlight();
 
-            document
-                .getElementById(
-                    "pianoFeedback"
-                )
-                .textContent =
+            document.getElementById(
+                "pianoFeedback"
+            ).textContent =
                 "Ready — start again from the first note.";
 
         }}, 500);
@@ -4369,39 +2686,26 @@ function handleNotePlay(
 
 }}
 
-
 function activatePianoKeyboard() {{
 
     document.body.focus();
 
-    document
-        .getElementById(
-            "pianoApp"
-        )
-        .focus();
+    document.getElementById("pianoApp").focus();
 
-
-    document
-        .getElementById(
-            "pianoActivation"
-        )
-        .textContent =
+    document.getElementById(
+        "pianoActivation"
+    ).textContent =
         "Keyboard active : use A–Y to play the piano.";
 
 }}
-
 
 function generateLetter() {{
 
     const playerName =
         document
-            .getElementById(
-                "playerName"
-            )
+            .getElementById("playerName")
             .value
-            .trim() ||
-        "Brave Bard";
-
+            .trim() || "Brave Bard";
 
     return `
 =======================================================
@@ -4419,64 +2723,49 @@ themselves worthy!
 
 }}
 
-
 function updateLetterPreview() {{
 
-    document
-        .getElementById(
-            "letterPreview"
-        )
-        .textContent =
+    document.getElementById(
+        "letterPreview"
+    ).textContent =
         generateLetter();
 
 }}
 
-
 function buildPiano() {{
 
     if (pianoBuilt) return;
-
     pianoBuilt = true;
 
-
     document
-        .querySelectorAll(
-            ".piano-key"
-        )
+        .querySelectorAll(".piano-key")
         .forEach(el => {{
 
             const note =
                 el.dataset.note;
 
             const freq =
-                Number(
-                    el.dataset.freq
-                );
+                Number(el.dataset.freq);
 
             const key =
-                el.dataset.key
-                    .toLowerCase();
+                el.dataset.key.toLowerCase();
 
-
-            noteElements[note] =
-                el;
-
+            noteElements[note] = el;
 
             keyMap[key] = {{
 
                 note: note,
+
                 freq: freq,
+
                 element: el
 
             }};
 
         }});
 
-
     document
-        .getElementById(
-            "pianoWrapper"
-        )
+        .getElementById("pianoWrapper")
         .addEventListener(
             "mousedown",
             () => {{
@@ -4485,7 +2774,6 @@ function buildPiano() {{
 
             }}
         );
-
 
     document.addEventListener(
         "keydown",
@@ -4500,15 +2788,12 @@ function buildPiano() {{
             if (event.repeat)
                 return;
 
-
             event.preventDefault();
 
             activatePianoKeyboard();
 
-
             const item =
                 keyMap[key];
-
 
             handleNotePlay(
                 item.note,
@@ -4519,21 +2804,15 @@ function buildPiano() {{
         }}
     );
 
-
     document
-        .getElementById(
-            "playerName"
-        )
+        .getElementById("playerName")
         .addEventListener(
             "input",
             updateLetterPreview
         );
 
-
     document
-        .getElementById(
-            "downloadLetter"
-        )
+        .getElementById("downloadLetter")
         .addEventListener(
             "click",
             () => {{
@@ -4541,41 +2820,27 @@ function buildPiano() {{
                 const letter =
                     generateLetter();
 
-
                 const playerName =
                     document
-                        .getElementById(
-                            "playerName"
-                        )
+                        .getElementById("playerName")
                         .value
-                        .trim() ||
-                    "Brave Bard";
-
+                        .trim() || "Brave Bard";
 
                 const blob =
                     new Blob(
                         [letter],
                         {{
-                            type:
-                                "text/plain"
+                            type: "text/plain"
                         }}
                     );
 
-
                 const url =
-                    URL.createObjectURL(
-                        blob
-                    );
-
+                    URL.createObjectURL(blob);
 
                 const link =
-                    document.createElement(
-                        "a"
-                    );
-
+                    document.createElement("a");
 
                 link.href = url;
-
 
                 link.download =
                     "Acceptance_Letter_" +
@@ -4585,31 +2850,20 @@ function buildPiano() {{
                     ) +
                     ".txt";
 
-
                 document
                     .body
-                    .appendChild(
-                        link
-                    );
-
+                    .appendChild(link);
 
                 link.click();
 
-
                 document
                     .body
-                    .removeChild(
-                        link
-                    );
+                    .removeChild(link);
 
-
-                URL.revokeObjectURL(
-                    url
-                );
+                URL.revokeObjectURL(url);
 
             }}
         );
-
 
     renderTargetSequence();
 
@@ -4617,213 +2871,60 @@ function buildPiano() {{
 
     activatePianoKeyboard();
 
-}
-
-
-/* ============================================================
-   FRAME RESIZING
-   ============================================================ */
-
-function resizeFrame() {{
-
-    try {{
-
-        if (window.frameElement) {{
-
-            window.frameElement.style.height =
-                document.documentElement
-                    .scrollHeight + "px";
-
-        }}
-
-    }} catch (e) {{}}
-
 }}
 
+/* ---------- Frame resizing ---------- */
 
-window.addEventListener(
-    "load",
-    resizeFrame
-);
-
-window.addEventListener(
-    "resize",
-    resizeFrame
-);
-
-
-new MutationObserver(
-    resizeFrame
-).observe(
-    document.body,
-    {{
-        childList: true,
-        subtree: true,
-        attributes: true,
-        attributeFilter: [
-            "class",
-            "style"
-        ]
-    }}
-);
-
-
-setTimeout(
-    resizeFrame,
-    50
-);
-
-setTimeout(
-    resizeFrame,
-    300
-);
-
-setTimeout(
-    resizeFrame,
-    1000
-);
-
-
-/* ============================================================
-   REVEAL FLOW
-   ============================================================ */
-
-document
-    .getElementById(
-        "toPuzzle2Btn"
-    )
-    .addEventListener(
-        "click",
-        () => {{
-
-            document
-                .getElementById(
-                    "qrBox"
-                )
-                .classList
-                .add("show");
-
-
-            setTimeout(
-                resizeFrame,
-                50
-            );
-
-
-            setTimeout(
-                () => {{
-
-                    document
-                        .getElementById(
-                            "qrBox"
-                        )
-                        .scrollIntoView({{
-                            behavior:
-                                "smooth",
-                            block:
-                                "center"
-                        }});
-
-                }},
-                100
-            );
-
+function resizeFrame() {{
+    try {{
+        if (window.frameElement) {{
+            window.frameElement.style.height =
+                document.documentElement.scrollHeight + "px";
         }}
-    );
+    }} catch (e) {{}}
+}}
 
+window.addEventListener("load", resizeFrame);
+window.addEventListener("resize", resizeFrame);
 
-document
-    .getElementById(
-        "toCrosswordBtn"
-    )
-    .addEventListener(
-        "click",
-        () => {{
+new MutationObserver(resizeFrame).observe(document.body, {{
+    childList: true,
+    subtree: true,
+    attributes: true,
+    attributeFilter: ["class", "style"]
+}});
 
-            document
-                .getElementById(
-                    "crosswordBox"
-                )
-                .classList
-                .add("show");
+setTimeout(resizeFrame, 50);
+setTimeout(resizeFrame, 300);
+setTimeout(resizeFrame, 1000);
 
+/* ---------- Reveal flow ---------- */
 
-            buildCrossword();
+document.getElementById("toPuzzle2Btn").addEventListener("click", () => {{
+    document.getElementById("qrBox").classList.add("show");
+    setTimeout(resizeFrame, 50);
+    setTimeout(() => {{
+        document.getElementById("qrBox").scrollIntoView({{ behavior: "smooth", block: "center" }});
+    }}, 100);
+}});
 
+document.getElementById("toCrosswordBtn").addEventListener("click", () => {{
+    document.getElementById("crosswordBox").classList.add("show");
+    buildCrossword();
+    setTimeout(resizeFrame, 50);
+    setTimeout(() => {{
+        document.getElementById("crosswordBox").scrollIntoView({{ behavior: "smooth", block: "start" }});
+    }}, 100);
+}});
 
-            setTimeout(
-                resizeFrame,
-                50
-            );
-
-
-            setTimeout(
-                () => {{
-
-                    document
-                        .getElementById(
-                            "crosswordBox"
-                        )
-                        .scrollIntoView({{
-                            behavior:
-                                "smooth",
-                            block:
-                                "start"
-                        }});
-
-                }},
-                100
-            );
-
-        }}
-    );
-
-
-document
-    .getElementById(
-        "toPuzzle3Btn"
-    )
-    .addEventListener(
-        "click",
-        () => {{
-
-            document
-                .getElementById(
-                    "pianoBox"
-                )
-                .classList
-                .add("show");
-
-
-            buildPiano();
-
-
-            setTimeout(
-                resizeFrame,
-                50
-            );
-
-
-            setTimeout(
-                () => {{
-
-                    document
-                        .getElementById(
-                            "pianoBox"
-                        )
-                        .scrollIntoView({{
-                            behavior:
-                                "smooth",
-                            block:
-                                "start"
-                        }});
-
-                }},
-                100
-            );
-
-        }}
-    );
+document.getElementById("toPuzzle3Btn").addEventListener("click", () => {{
+    document.getElementById("pianoBox").classList.add("show");
+    buildPiano();
+    setTimeout(resizeFrame, 50);
+    setTimeout(() => {{
+        document.getElementById("pianoBox").scrollIntoView({{ behavior: "smooth", block: "start" }});
+    }}, 100);
+}});
 
 </script>
 
@@ -4831,9 +2932,4 @@ document
 </html>
 """
 
-
-render_html_frame(
-    wordle_html,
-    height=820,
-    scrolling=True
-)
+render_html_frame(wordle_html, height=820, scrolling=True)
