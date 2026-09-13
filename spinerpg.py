@@ -138,7 +138,7 @@ CROSSWORD_CLUES = {
         },
         {
             "num": 6,
-            "clue": "This word is the answer to the phylum clue above — the third-largest phylum in the animal kingdom.",
+            "clue": "This word is the answer to the phylum clue  — the third-largest phylum in the animal kingdom.",
             "length": 8,
             "row": 0,
             "col": 0
@@ -168,7 +168,7 @@ CROSSWORD_CLUES = {
         },
         {
             "num": 2,
-            "clue": "This and the next clue are 2 words, part of 1 big phrase. For this word: a group into which animals, plants, etc. are divided, smaller than a kingdom and larger than a class.",
+            "clue": "This and the clue 6 are 2 words, part of 1 big phrase. For this word: a group into which animals, plants, etc. are divided, smaller than a kingdom and larger than a class.",
             "length": 6,
             "row": 6,
             "col": 10
