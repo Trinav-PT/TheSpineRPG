@@ -1381,6 +1381,22 @@ body {{
     font-style: italic;
 }}
 
+/* --- Site credits footer --- */
+
+.site-credits {{
+    margin-top: 50px;
+    padding-top: 22px;
+    border-top: 1px solid #4a4132;
+    width: 100%;
+    max-width: 520px;
+    text-align: center;
+    font-size: 13px;
+    line-height: 1.9;
+    color: #a8875a;
+    font-style: italic;
+    letter-spacing: 0.5px;
+}}
+
 </style>
 </head>
 
@@ -1596,6 +1612,14 @@ body {{
             <div class="chewie-caption">🎉 CHEWIE APPROVES! 🎉</div>
             <div class="chewie-hint">(tap anywhere to dismiss)</div>
         </div>
+    </div>
+
+    <div class="site-credits">
+        Website made by<br>
+        Avani Mahawar<br>
+        Malini Sen<br>
+        Trinav Talukdar<br>
+        with love &lt;3
     </div>
 
 </div>
