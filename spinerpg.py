@@ -1325,7 +1325,7 @@ body {{
     <div id="foundersBox">
         <div class="xword-title">The Founding Members</div>
         <div class="founders-lore">
-            <p>The following are the founding members of The Spine. Without any of them, the heart and soul of the club remains missing. They began the club, and did writing circles before the club was even solidified. As UG28 joined, we have only elaborated from the ground work that they set. These people are also (completely unrelated) extremely smart.</p>
+            <p>The following are the founding members of The Spine. Without any of them, the heart and soul of the club remains missing. They began the club, and did writing circles before the club was even solidified. As UG28 joined, we have only elaborated from the ground work that they set. These people are also (completely unrelated) extremely smart. [this was written by Avani]</p>
         </div>
         
         <div class="founders-grid">
