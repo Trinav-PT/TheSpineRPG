@@ -68,94 +68,118 @@ def get_qr_html():
     """
 
 
-# Build the new crossword grid (13 rows, 10 cols)
+# Build the crossword grid
 def build_new_crossword_grid():
     """
-    Build the grid exactly as specified:
-    - Row indices: 0-12 (for 1-indexed rows 1-13)
-    - Col indices: 0-9 (for 1-indexed cols 1-10)
-    - None = black cell, letter = white cell
+    Crossword grid only.
+    None = black cell, letter = white cell.
+
+    The words are placed so that all 8 answers form one connected
+    crossword and the clue numbering below remains explicit.
     """
     rows = 13
-    cols = 10
+    cols = 13
     grid = [[None] * cols for _ in range(rows)]
-    
-    # Define white cells and their letters (0-indexed)
-    white_cells = {
-        # Column 0 (col 1): full column R E A D I N G C I R C L E
-        (0, 0): 'R', (1, 0): 'E', (2, 0): 'A', (3, 0): 'D',
-        (4, 0): 'I', (5, 0): 'N', (6, 0): 'G', (7, 0): 'C',
-        (8, 0): 'I', (9, 0): 'R', (10, 0): 'C', (11, 0): 'L', (12, 0): 'E',
-        
-        # Column 1 (col 2): only rows 9-10 (0-indexed) E R
-        (9, 1): 'E', (10, 1): 'R',
-        
-        # Column 2 (col 3): only rows 0, 7 (0-indexed) P C
-        (0, 2): 'P', (7, 2): 'C',
-        
-        # Column 3 (col 4): only rows 0, 7 (0-indexed) H H
-        (0, 3): 'H', (7, 3): 'H',
-        
-        # Column 4 (col 5): only rows 0, 7 (0-indexed) Y O
-        (0, 4): 'Y', (7, 4): 'O',
-        
-        # Column 5 (col 6): only rows 0, 7 (0-indexed) L R
-        (0, 5): 'L', (7, 5): 'R',
-        
-        # Column 6 (col 7): only rows 0, 7 (0-indexed) U D
-        (0, 6): 'U', (7, 6): 'D',
-        
-        # Column 7 (col 8): rows 0-11 (0-indexed) M U R D E R B A L L A D
-        (0, 7): 'M', (1, 7): 'U', (2, 7): 'R', (3, 7): 'D',
-        (4, 7): 'E', (5, 7): 'R', (6, 7): 'B', (7, 7): 'A',
-        (8, 7): 'L', (9, 7): 'L', (10, 7): 'A', (11, 7): 'D',
-        
-        # Column 8 (col 9): rows 1-8 (0-indexed) H O G W A R T S
-        (1, 8): 'H', (2, 8): 'O', (3, 8): 'G', (4, 8): 'W',
-        (5, 8): 'A', (6, 8): 'R', (7, 8): 'T', (8, 8): 'S',
-        
-        # Column 9 (col 10): rows 2-9 (0-indexed) B O N E Y A R D
-        (2, 9): 'B', (3, 9): 'O', (4, 9): 'N', (5, 9): 'E',
-        (6, 9): 'Y', (7, 9): 'A', (8, 9): 'R', (9, 9): 'D',
-        
-        # Row 9 (row 10), cols 0-6 (cols 1-7): R E A D E R S
-        # (0,0) already set, so we need (9, 1-6): E A D E R S
-        (9, 2): 'A', (9, 3): 'D', (9, 4): 'E', (9, 5): 'R', (9, 6): 'S',
-        
-        # Row 10 (row 11), cols 0-6 (cols 1-7): C R A N I U M
-        # (10,0) already set as C, so we need (10, 1-6): R A N I U M
-        (10, 1): 'R', (10, 2): 'A', (10, 3): 'N', (10, 4): 'I', (10, 5): 'U', (10, 6): 'M',
-    }
-    
-    # Fill in the grid
-    for (r, c), letter in white_cells.items():
-        grid[r][c] = letter
-    
+
+    # Answer placements:
+    # 1 Down  : READING CIRCLE
+    # 2 Down  : PHYLUM
+    # 3 Across: MURDER BALLAD
+    # 4 Down  : HOGWARTS
+    # 5 Down  : BONEYARD
+    # 6 Across: CHORDATA
+    # 7 Across: READERS
+    # 8 Across: CRANIUM
+
+    placements = [
+        ("READINGCIRCLE", "D", 0, 3),
+        ("PHYLUM",        "D", 6, 10),
+        ("MURDERBALLAD",  "A", 9, 1),
+        ("HOGWARTS",      "D", 5, 8),
+        ("BONEYARD",      "D", 4, 11),
+        ("CHORDATA",      "A", 0, 0),
+        ("READERS",       "A", 12, 2),
+        ("CRANIUM",       "A", 5, 0),
+    ]
+
+    for word, direction, row, col in placements:
+        for i, letter in enumerate(word):
+            r = row + (i if direction == "D" else 0)
+            c = col + (i if direction == "A" else 0)
+            grid[r][c] = letter
+
     return grid
 
 
 CROSSWORD_GRID = build_new_crossword_grid()
 
-# Define clues with automatic numbering
 CROSSWORD_CLUES = {
     "across": [
-        {"num": 2, "clue": "This and the next clue are 2 words, part of 1 big phrase. For this word: a group into which animals, plants, etc. are divided, smaller than a kingdom and larger than a class.", "length": 6, "row": 0, "col": 2},
-        {"num": 6, "clue": "This word is the answer to the phylum clue above — the third-largest phylum in the animal kingdom.", "length": 8, "row": 7, "col": 2},
-        {"num": 7, "clue": "Most people in this club are ________.", "length": 7, "row": 9, "col": 0},
-        {"num": 8, "clue": "A bony enclosure around the brain of a vertebrate. This is also what the core of the Spine calls itself.", "length": 7, "row": 10, "col": 0},
+        {
+            "num": 3,
+            "clue": "The Spine's flagship event, held every year for Fitoor. This event had the highest external participation last year!",
+            "length": 12,
+            "row": 9,
+            "col": 1
+        },
+        {
+            "num": 6,
+            "clue": "This word is the answer to the phylum clue above — the third-largest phylum in the animal kingdom.",
+            "length": 8,
+            "row": 0,
+            "col": 0
+        },
+        {
+            "num": 7,
+            "clue": "Most people in this club are ________.",
+            "length": 7,
+            "row": 12,
+            "col": 2
+        },
+        {
+            "num": 8,
+            "clue": "A bony enclosure around the brain of a vertebrate. This is also what the core of the Spine calls itself.",
+            "length": 7,
+            "row": 5,
+            "col": 0
+        },
     ],
     "down": [
-        {"num": 1, "clue": "We get together, sometimes weekly, to read. What do we call this (mini) event?", "length": "7,6", "row": 0, "col": 0},
-        {"num": 3, "clue": "The Spine's flagship event, held every year for Fitoor. This event had the highest external participation last year!", "length": "6,6", "row": 0, "col": 2},
-        {"num": 4, "clue": "We brought this boarding school to Plaksha in one of our earlier events.", "length": 8, "row": 1, "col": 8},
-        {"num": 5, "clue": "The Spine's very own magazine is called __________.", "length": 8, "row": 2, "col": 9},
+        {
+            "num": 1,
+            "clue": "We get together, sometimes weekly, to read. What do we call this (mini) event?",
+            "length": 13,
+            "row": 0,
+            "col": 3
+        },
+        {
+            "num": 2,
+            "clue": "This and the next clue are 2 words, part of 1 big phrase. For this word: a group into which animals, plants, etc. are divided, smaller than a kingdom and larger than a class.",
+            "length": 6,
+            "row": 6,
+            "col": 10
+        },
+        {
+            "num": 4,
+            "clue": "We brought this boarding school to Plaksha in one of our earlier events.",
+            "length": 8,
+            "row": 5,
+            "col": 8
+        },
+        {
+            "num": 5,
+            "clue": "The Spine's very own magazine is called __________.",
+            "length": 8,
+            "row": 4,
+            "col": 11
+        },
     ]
 }
 
 CROSSWORD_JSON = json.dumps({
     "grid": CROSSWORD_GRID,
     "rows": 13,
-    "cols": 10,
+    "cols": 13,
     "clues": CROSSWORD_CLUES
 })
 
@@ -1298,8 +1322,7 @@ let xwordCurrentDir = "A";
 const xwordCellEls = [];
 const xwordCellWords = [];
 
-function buildCrossword() {{
-
+function buildCrossword() {
     if (xwordBuilt) return;
     xwordBuilt = true;
 
@@ -1307,77 +1330,82 @@ function buildCrossword() {{
     const rows = CROSSWORD_DATA.rows;
     const cols = CROSSWORD_DATA.cols;
 
-    for (let r = 0; r < rows; r++) {{
+    for (let r = 0; r < rows; r++) {
         xwordCellEls.push(new Array(cols).fill(null));
-        xwordCellWords.push(new Array(cols).fill(null).map(() => ({{ A: null, D: null }})));
-    }}
+        xwordCellWords.push(
+            new Array(cols).fill(null).map(() => ({ A: null, D: null }))
+        );
+    }
 
-    // Map clue numbers to grid positions
-    const numMap = {{}};
-    for (let r = 0; r < rows; r++) {{
-        for (let c = 0; c < cols; c++) {{
-            if (grid[r][c] === null) continue;
-            
-            // Check if this starts an across word
-            const isAcrossStart = (c === 0 || grid[r][c - 1] === null) &&
-                                  (c + 1 < cols && grid[r][c + 1] !== null);
-            
-            // Check if this starts a down word
-            const isDownStart = (r === 0 || grid[r - 1][c] === null) &&
-                                (r + 1 < rows && grid[r + 1][c] !== null);
-            
-            if (isAcrossStart || isDownStart) {{
-                const key = r + "_" + c;
-                if (!numMap[key]) {{
-                    numMap[key] = Object.keys(numMap).length + 1;
-                }}
-            }}
-        }}
-    }}
+    // Use the explicit clue numbers from CROSSWORD_DATA.
+    // Do not generate numbers from grid position, because the clue
+    // numbers are part of the puzzle itself.
+    const numMap = {};
 
-    // Assign word indices to cells
+    Object.keys(CROSSWORD_DATA.clues).forEach(dir => {
+        CROSSWORD_DATA.clues[dir].forEach(clue => {
+            numMap[clue.row + "_" + clue.col] = clue.num;
+        });
+    });
+
+    // Assign word indices to cells.
     const clues = CROSSWORD_DATA.clues;
-    clues.across.forEach((clue, idx) => {{
-        const r = clue.row, c = clue.col;
-        for (let i = 0; i < clue.length; i++) {{
-            xwordCellWords[r][c + i].A = idx;
-        }}
-    }});
 
-    clues.down.forEach((clue, idx) => {{
-        const r = clue.row, c = clue.col;
-        const length = typeof clue.length === "string" 
-            ? clue.length.split(",").reduce((a, b) => parseInt(a) + parseInt(b))
-            : clue.length;
-        for (let i = 0; i < length; i++) {{
-            xwordCellWords[r + i][c].D = idx;
-        }}
-    }});
+    clues.across.forEach((clue, idx) => {
+        const r = clue.row;
+        const c = clue.col;
 
-    // Render grid
+        for (let i = 0; i < clue.length; i++) {
+            if (
+                r >= 0 && r < rows &&
+                c + i >= 0 && c + i < cols &&
+                grid[r][c + i] !== null
+            ) {
+                xwordCellWords[r][c + i].A = idx;
+            }
+        }
+    });
+
+    clues.down.forEach((clue, idx) => {
+        const r = clue.row;
+        const c = clue.col;
+
+        for (let i = 0; i < clue.length; i++) {
+            if (
+                r + i >= 0 && r + i < rows &&
+                c >= 0 && c < cols &&
+                grid[r + i][c] !== null
+            ) {
+                xwordCellWords[r + i][c].D = idx;
+            }
+        }
+    });
+
+    // Render grid.
     const gridEl = document.getElementById("xwordGrid");
     gridEl.style.gridTemplateColumns = "repeat(" + cols + ", 30px)";
     gridEl.style.gridTemplateRows = "repeat(" + rows + ", 30px)";
 
-    for (let r = 0; r < rows; r++) {{
-        for (let c = 0; c < cols; c++) {{
+    for (let r = 0; r < rows; r++) {
+        for (let c = 0; c < cols; c++) {
 
             const cellWrap = document.createElement("div");
             cellWrap.className = "xword-cell";
 
-            if (grid[r][c] === null) {{
+            if (grid[r][c] === null) {
                 cellWrap.classList.add("blocked");
                 gridEl.appendChild(cellWrap);
                 continue;
-            }}
+            }
 
             const key = r + "_" + c;
-            if (numMap[key]) {{
+
+            if (numMap[key]) {
                 const numEl = document.createElement("span");
                 numEl.className = "xword-num";
                 numEl.textContent = numMap[key];
                 cellWrap.appendChild(numEl);
-            }}
+            }
 
             const input = document.createElement("input");
             input.maxLength = 1;
@@ -1386,17 +1414,20 @@ function buildCrossword() {{
             input.autocomplete = "off";
 
             input.addEventListener("focus", () => setActiveCell(r, c));
-            input.addEventListener("click", () => {{
+
+            input.addEventListener("click", () => {
                 const cellInfo = xwordCellWords[r][c];
-                if (cellInfo.A !== null && cellInfo.D !== null) {{
+
+                if (cellInfo.A !== null && cellInfo.D !== null) {
                     xwordCurrentDir = (xwordCurrentDir === "A") ? "D" : "A";
-                }} else if (cellInfo.A !== null) {{
+                } else if (cellInfo.A !== null) {
                     xwordCurrentDir = "A";
-                }} else if (cellInfo.D !== null) {{
+                } else if (cellInfo.D !== null) {
                     xwordCurrentDir = "D";
-                }}
+                }
+
                 setActiveCell(r, c);
-            }});
+            });
 
             input.addEventListener("keydown", (e) => onXwordKeydown(e, r, c));
             input.addEventListener("input", (e) => onXwordInput(e, r, c));
@@ -1404,195 +1435,270 @@ function buildCrossword() {{
             cellWrap.appendChild(input);
             gridEl.appendChild(cellWrap);
             xwordCellEls[r][c] = input;
-
-        }}
-    }}
+        }
+    }
 
     renderClues();
     document.getElementById("checkCrosswordBtn").addEventListener("click", checkCrossword);
+}
 
-}}
-
-function renderClues() {{
+function renderClues() {
     const acrossCluesEl = document.getElementById("acrossClues");
     const downCluesEl = document.getElementById("downClues");
 
-    CROSSWORD_DATA.clues.across.forEach((clue, idx) => {{
+    acrossCluesEl.innerHTML = "";
+    downCluesEl.innerHTML = "";
+
+    CROSSWORD_DATA.clues.across.forEach((clue, idx) => {
         const li = document.createElement("li");
         li.className = "clue-item";
         li.dataset.num = clue.num;
         li.dataset.dir = "A";
         li.dataset.idx = idx;
-        li.innerHTML = `<span class="clue-num">${{clue.num}}.</span> ${{clue.clue}} <span class="clue-len">(${{clue.length}})</span>`;
+
+        li.innerHTML =
+            `<span class="clue-num">${clue.num}.</span> ` +
+            `${clue.clue} ` +
+            `<span class="clue-len">(${clue.length})</span>`;
+
         li.addEventListener("click", () => jumpToClue("A", idx));
         acrossCluesEl.appendChild(li);
-    }});
+    });
 
-    CROSSWORD_DATA.clues.down.forEach((clue, idx) => {{
+    CROSSWORD_DATA.clues.down.forEach((clue, idx) => {
         const li = document.createElement("li");
         li.className = "clue-item";
         li.dataset.num = clue.num;
         li.dataset.dir = "D";
         li.dataset.idx = idx;
-        li.innerHTML = `<span class="clue-num">${{clue.num}}.</span> ${{clue.clue}} <span class="clue-len">(${{clue.length}})</span>`;
+
+        li.innerHTML =
+            `<span class="clue-num">${clue.num}.</span> ` +
+            `${clue.clue} ` +
+            `<span class="clue-len">(${clue.length})</span>`;
+
         li.addEventListener("click", () => jumpToClue("D", idx));
         downCluesEl.appendChild(li);
-    }});
-}}
+    });
+}
 
-function jumpToClue(dir, idx) {{
+function jumpToClue(dir, idx) {
     const clue = CROSSWORD_DATA.clues[dir === "A" ? "across" : "down"][idx];
-    xwordCurrentDir = dir;
-    const el = xwordCellEls[clue.row][clue.col];
-    if (el) el.focus();
-    setActiveCell(clue.row, clue.col);
-}}
 
-function clearActiveHighlight() {{
+    xwordCurrentDir = dir;
+
+    const el = xwordCellEls[clue.row][clue.col];
+
+    if (el) el.focus();
+
+    setActiveCell(clue.row, clue.col);
+}
+
+function clearActiveHighlight() {
     document.querySelectorAll(".xword-cell input.active-word")
         .forEach(el => el.classList.remove("active-word"));
+
     document.querySelectorAll(".clue-item.active-clue")
         .forEach(el => el.classList.remove("active-clue"));
-}}
+}
 
-function setActiveCell(r, c) {{
-
+function setActiveCell(r, c) {
     if (xwordSolved) return;
 
     clearActiveHighlight();
 
     const cellInfo = xwordCellWords[r][c];
+
     let dir = xwordCurrentDir;
-    if (cellInfo[dir] === null) {{
+
+    if (cellInfo[dir] === null) {
         dir = (dir === "A") ? "D" : "A";
-        if (cellInfo[dir] !== null) xwordCurrentDir = dir;
-    }}
+
+        if (cellInfo[dir] !== null) {
+            xwordCurrentDir = dir;
+        }
+    }
 
     const wordIdx = cellInfo[xwordCurrentDir];
+
     if (wordIdx === null) return;
 
-    const clue = CROSSWORD_DATA.clues[xwordCurrentDir === "A" ? "across" : "down"][wordIdx];
-    
-    // Highlight cells in this word
-    for (let k = 0; k < (typeof clue.length === "string" ? parseInt(clue.length.split(",")[0]) + parseInt(clue.length.split(",")[1]) : clue.length); k++) {{
+    const clue =
+        CROSSWORD_DATA.clues[
+            xwordCurrentDir === "A" ? "across" : "down"
+        ][wordIdx];
+
+    // Highlight exactly clue.length cells.
+    for (let k = 0; k < clue.length; k++) {
         const rr = xwordCurrentDir === "A" ? clue.row : clue.row + k;
         const cc = xwordCurrentDir === "A" ? clue.col + k : clue.col;
-        if (xwordCellEls[rr] && xwordCellEls[rr][cc]) {{
+
+        if (xwordCellEls[rr] && xwordCellEls[rr][cc]) {
             xwordCellEls[rr][cc].classList.add("active-word");
-        }}
-    }}
+        }
+    }
 
     const clueEl = document.querySelector(
-        '.clue-item[data-num="' + clue.num + '"][data-dir="' + xwordCurrentDir + '"]'
+        '.clue-item[data-num="' +
+        clue.num +
+        '"][data-dir="' +
+        xwordCurrentDir +
+        '"]'
     );
+
     if (clueEl) clueEl.classList.add("active-clue");
+}
 
-}}
+function moveFocus(r, c, dir, step) {
+    let rr = r;
+    let cc = c;
 
-function moveFocus(r, c, dir, step) {{
-    let rr = r, cc = c;
-    while (true) {{
+    while (true) {
         rr += (dir === "D") ? step : 0;
         cc += (dir === "A") ? step : 0;
-        if (rr < 0 || rr >= CROSSWORD_DATA.rows || cc < 0 || cc >= CROSSWORD_DATA.cols) return;
-        if (xwordCellEls[rr][cc]) {{
+
+        if (
+            rr < 0 ||
+            rr >= CROSSWORD_DATA.rows ||
+            cc < 0 ||
+            cc >= CROSSWORD_DATA.cols
+        ) {
+            return;
+        }
+
+        if (xwordCellEls[rr][cc]) {
             xwordCellEls[rr][cc].focus();
             return;
-        }}
-        return;
-    }}
-}}
+        }
 
-function onXwordInput(e, r, c) {{
+        return;
+    }
+}
+
+function onXwordInput(e, r, c) {
     const val = e.target.value.toUpperCase().replace(/[^A-Z]/g, "");
+
     e.target.value = val.slice(-1);
     e.target.classList.remove("correct", "wrong");
-    if (val) {{
+
+    if (val) {
         moveFocus(r, c, xwordCurrentDir, 1);
-    }}
-}}
+    }
+}
 
-function onXwordKeydown(e, r, c) {{
-
+function onXwordKeydown(e, r, c) {
     if (xwordSolved) return;
 
-    if (e.key === "Backspace") {{
-        if (!e.target.value) {{
+    if (e.key === "Backspace") {
+        if (!e.target.value) {
             e.preventDefault();
             moveFocus(r, c, xwordCurrentDir, -1);
-        }}
+        }
         return;
-    }}
+    }
 
-    if (e.key === "ArrowRight") {{ e.preventDefault(); xwordCurrentDir = "A"; moveFocus(r, c, "A", 1); return; }}
-    if (e.key === "ArrowLeft")  {{ e.preventDefault(); xwordCurrentDir = "A"; moveFocus(r, c, "A", -1); return; }}
-    if (e.key === "ArrowDown")  {{ e.preventDefault(); xwordCurrentDir = "D"; moveFocus(r, c, "D", 1); return; }}
-    if (e.key === "ArrowUp")    {{ e.preventDefault(); xwordCurrentDir = "D"; moveFocus(r, c, "D", -1); return; }}
+    if (e.key === "ArrowRight") {
+        e.preventDefault();
+        xwordCurrentDir = "A";
+        moveFocus(r, c, "A", 1);
+        return;
+    }
 
-}}
+    if (e.key === "ArrowLeft") {
+        e.preventDefault();
+        xwordCurrentDir = "A";
+        moveFocus(r, c, "A", -1);
+        return;
+    }
 
-function checkCrossword() {{
+    if (e.key === "ArrowDown") {
+        e.preventDefault();
+        xwordCurrentDir = "D";
+        moveFocus(r, c, "D", 1);
+        return;
+    }
 
+    if (e.key === "ArrowUp") {
+        e.preventDefault();
+        xwordCurrentDir = "D";
+        moveFocus(r, c, "D", -1);
+        return;
+    }
+}
+
+function checkCrossword() {
     const grid = CROSSWORD_DATA.grid;
+
     let allFilled = true;
     let allCorrect = true;
 
-    for (let r = 0; r < CROSSWORD_DATA.rows; r++) {{
-        for (let c = 0; c < CROSSWORD_DATA.cols; c++) {{
+    for (let r = 0; r < CROSSWORD_DATA.rows; r++) {
+        for (let c = 0; c < CROSSWORD_DATA.cols; c++) {
+
             if (grid[r][c] === null) continue;
+
             const el = xwordCellEls[r][c];
             const val = el.value.toUpperCase();
-            if (!val) {{
+
+            if (!val) {
                 allFilled = false;
                 continue;
-            }}
-            if (val === grid[r][c]) {{
+            }
+
+            if (val === grid[r][c]) {
                 el.classList.add("correct");
                 el.classList.remove("wrong");
-            }} else {{
+            } else {
                 allCorrect = false;
                 el.classList.remove("correct");
                 el.classList.add("wrong");
-            }}
-        }}
-    }}
+            }
+        }
+    }
 
     const feedbackEl = document.getElementById("xwordFeedback");
 
-    if (!allFilled) {{
-        feedbackEl.innerHTML = '<span style="color:#e57373;">Fill in every cell first.</span>';
+    if (!allFilled) {
+        feedbackEl.innerHTML =
+            '<span style="color:#e57373;">Fill in every cell first.</span>';
         return;
-    }}
+    }
 
-    if (!allCorrect) {{
-        feedbackEl.innerHTML = '<span style="color:#e57373;">Some letters are off — green is correct, red is wrong.</span>';
+    if (!allCorrect) {
+        feedbackEl.innerHTML =
+            '<span style="color:#e57373;">Some letters are off — green is correct, red is wrong.</span>';
         return;
-    }}
+    }
 
     xwordSolved = true;
-    feedbackEl.innerHTML = '<span style="color:#81c784;">FLAWLESS! Puzzle II solved.</span>';
 
-    if (window.confetti) {{
-        confetti({{
+    feedbackEl.innerHTML =
+        '<span style="color:#81c784;">FLAWLESS! Puzzle II solved.</span>';
+
+    if (window.confetti) {
+        confetti({
             particleCount: 200,
             spread: 100,
-            origin: {{ y: 0.5 }},
+            origin: { y: 0.5 },
             colors: ["#d8b878", "#f0e4cf", "#6d8a5b", "#c4a04a"]
-        }});
-    }}
+        });
+    }
 
-    setTimeout(() => {{
+    setTimeout(() => {
         document.getElementById("foundersBox").classList.add("show");
         setTimeout(resizeFrame, 50);
-        document.getElementById("foundersBox").scrollIntoView({{ behavior: "smooth", block: "start" }});
-    }}, 1000);
+
+        document.getElementById("foundersBox").scrollIntoView({
+            behavior: "smooth",
+            block: "start"
+        });
+    }, 1000);
 
     window.parent.postMessage(
-        {{ type: "STREAMLIT_CROSSWORD_PASSED" }},
+        { type: "STREAMLIT_CROSSWORD_PASSED" },
         "*"
     );
-
-}}
+}
 
 /* ============= Lightbox for founder photos ============= */
 
