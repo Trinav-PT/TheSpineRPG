@@ -4,6 +4,26 @@ from pathlib import Path
 
 import streamlit as st
 
+
+def load_image_data_uri(basename):
+    """Look for `basename.png` / `.jpg` / `.jpeg` / `.webp` / `.gif` next to
+    this script and return a base64 data: URI for it, or None if no such
+    file exists. Used for every local image (founder photos, the QR code,
+    the chewie easter-egg) so they're embedded directly instead of relying
+    on an internet connection at view time."""
+    here = Path(__file__).resolve().parent if "__file__" in globals() else Path(".")
+
+    for ext in ("png", "jpg", "jpeg", "webp", "gif"):
+        candidate = here / f"{basename}.{ext}"
+        if candidate.exists():
+            data = candidate.read_bytes()
+            b64 = base64.b64encode(data).decode("utf-8")
+            mime = "jpeg" if ext == "jpg" else ext
+            return f"data:image/{mime};base64,{b64}"
+
+    return None
+
+
 def render_html_frame(html_string, height, scrolling=False):
     """Render raw HTML in an iframe, using the new st.iframe API when
     available and falling back to components.html on older Streamlit
@@ -18,22 +38,16 @@ def render_html_frame(html_string, height, scrolling=False):
 
 def get_qr_html():
     """Return an <img> tag for a real Instagram QR code if one has been
-    dropped next to this script (instagram_qr.png/.jpg/.jpeg), otherwise
-    fall back to a stylised placeholder graphic."""
-    here = Path(__file__).resolve().parent if "__file__" in globals() else Path(".")
+    dropped next to this script (qr.png/.jpg/.jpeg/...), otherwise fall
+    back to a stylised placeholder graphic."""
+    uri = load_image_data_uri("qr")
 
-    for filename in ("instagram_qr.png", "instagram_qr.jpg", "instagram_qr.jpeg"):
-        candidate = here / filename
-        if candidate.exists():
-            data = candidate.read_bytes()
-            b64 = base64.b64encode(data).decode("utf-8")
-            ext = candidate.suffix.lstrip(".").lower()
-            mime = "jpeg" if ext in ("jpg", "jpeg") else ext
-            return (
-                f'<img src="data:image/{mime};base64,{b64}" alt="Instagram QR code" '
-                f'style="width:220px;height:220px;border-radius:10px;'
-                f'border:2px solid #d8b878;">'
-            )
+    if uri:
+        return (
+            f'<img src="{uri}" alt="Instagram QR code" '
+            f'style="width:220px;height:220px;border-radius:10px;'
+            f'border:2px solid #d8b878;">'
+        )
 
     # Placeholder shown until a real QR image is added.
     return """
@@ -184,6 +198,34 @@ CROSSWORD_JSON = json.dumps({
 })
 
 QR_IMAGE_HTML = get_qr_html()
+
+# ----------------------------------------------------------------------------
+# FOUNDER PHOTOS + CHEWIE EASTER EGG
+# ----------------------------------------------------------------------------
+
+FOUNDER_PHOTO_BASENAMES = {
+    "maanal": ["maanal1", "maanal2", "maanal3"],
+    "aman": ["aman1", "aman2", "aman3"],
+    "trinav": ["trinav1", "trinav2", "trinav3"],
+}
+
+founder_photos = {}
+
+for member, basenames in FOUNDER_PHOTO_BASENAMES.items():
+    srcs = []
+    for i, basename in enumerate(basenames, start=1):
+        uri = load_image_data_uri(basename)
+        srcs.append(
+            uri
+            if uri
+            else f"https://via.placeholder.com/180x200?text={member.capitalize()}+{i}"
+        )
+    founder_photos[member] = srcs
+
+FOUNDER_PHOTOS_JSON = json.dumps(founder_photos)
+
+CHEWIE_IMAGE_URI = load_image_data_uri("chewie")
+CHEWIE_URI_JSON = json.dumps(CHEWIE_IMAGE_URI)
 
 # ----------------------------------------------------------------------------
 # PUZZLE III DATA (The Melody) — generated exactly as in the standalone
@@ -1263,6 +1305,70 @@ body {{
     color: #e0d5c1;
 }}
 
+/* --- Chewie easter egg --- */
+
+.chewie-overlay {{
+    display: none;
+    position: fixed;
+    z-index: 10001;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.75);
+    cursor: pointer;
+}}
+
+.chewie-overlay.show {{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}}
+
+.chewie-card {{
+    text-align: center;
+    cursor: default;
+}}
+
+.chewie-photo {{
+    max-width: 320px;
+    max-height: 60vh;
+    object-fit: contain;
+    border-radius: 14px;
+    border: 4px solid #d8b878;
+    box-shadow: 0 0 40px rgba(216, 184, 120, 0.5);
+    animation: chewiePopIn 0.6s cubic-bezier(.34, 1.56, .64, 1) forwards;
+}}
+
+@keyframes chewiePopIn {{
+    0% {{ transform: scale(0) rotate(-20deg); opacity: 0; }}
+    55% {{ transform: scale(1.2) rotate(10deg); opacity: 1; }}
+    75% {{ transform: scale(0.92) rotate(-5deg); }}
+    100% {{ transform: scale(1) rotate(0deg); }}
+}}
+
+.chewie-caption {{
+    margin-top: 16px;
+    font-size: 22px;
+    font-weight: bold;
+    color: #ffe9a8;
+    letter-spacing: 1px;
+    text-shadow: 0 0 12px rgba(216, 184, 120, 0.6);
+    animation: chewieWiggle 1.8s ease-in-out infinite;
+}}
+
+@keyframes chewieWiggle {{
+    0%, 100% {{ transform: rotate(-2deg); }}
+    50% {{ transform: rotate(2deg); }}
+}}
+
+.chewie-hint {{
+    margin-top: 8px;
+    font-size: 12px;
+    color: #c9b98d;
+    font-style: italic;
+}}
+
 </style>
 </head>
 
@@ -1332,27 +1438,27 @@ body {{
             <div class="founder-card">
                 <div class="founder-name">Maanal Gauri <span class="founder-batch">UG25</span></div>
                 <div class="founder-photos">
-                    <img src="https://via.placeholder.com/180x200?text=Maanal+1" class="founder-photo" onclick="openLightbox('maanal', 0)" alt="Maanal Gauri 1">
-                    <img src="https://via.placeholder.com/180x200?text=Maanal+2" class="founder-photo" onclick="openLightbox('maanal', 1)" alt="Maanal Gauri 2">
-                    <img src="https://via.placeholder.com/180x200?text=Maanal+3" class="founder-photo" onclick="openLightbox('maanal', 2)" alt="Maanal Gauri 3">
+                    <img src="{founder_photos['maanal'][0]}" class="founder-photo" onclick="openLightbox('maanal', 0)" alt="Maanal Gauri 1">
+                    <img src="{founder_photos['maanal'][1]}" class="founder-photo" onclick="openLightbox('maanal', 1)" alt="Maanal Gauri 2">
+                    <img src="{founder_photos['maanal'][2]}" class="founder-photo" onclick="openLightbox('maanal', 2)" alt="Maanal Gauri 3">
                 </div>
             </div>
 
             <div class="founder-card">
                 <div class="founder-name">Aman Paliwal <span class="founder-batch">UG26</span></div>
                 <div class="founder-photos">
-                    <img src="https://via.placeholder.com/180x200?text=Aman+1" class="founder-photo" onclick="openLightbox('aman', 0)" alt="Aman Paliwal 1">
-                    <img src="https://via.placeholder.com/180x200?text=Aman+2" class="founder-photo" onclick="openLightbox('aman', 1)" alt="Aman Paliwal 2">
-                    <img src="https://via.placeholder.com/180x200?text=Aman+3" class="founder-photo" onclick="openLightbox('aman', 2)" alt="Aman Paliwal 3">
+                    <img src="{founder_photos['aman'][0]}" class="founder-photo" onclick="openLightbox('aman', 0)" alt="Aman Paliwal 1">
+                    <img src="{founder_photos['aman'][1]}" class="founder-photo" onclick="openLightbox('aman', 1)" alt="Aman Paliwal 2">
+                    <img src="{founder_photos['aman'][2]}" class="founder-photo" onclick="openLightbox('aman', 2)" alt="Aman Paliwal 3">
                 </div>
             </div>
 
             <div class="founder-card">
                 <div class="founder-name">Trinav Talukdar <span class="founder-batch">UG27</span></div>
                 <div class="founder-photos">
-                    <img src="https://via.placeholder.com/180x200?text=Trinav+1" class="founder-photo" onclick="openLightbox('trinav', 0)" alt="Trinav Talukdar 1">
-                    <img src="https://via.placeholder.com/180x200?text=Trinav+2" class="founder-photo" onclick="openLightbox('trinav', 1)" alt="Trinav Talukdar 2">
-                    <img src="https://via.placeholder.com/180x200?text=Trinav+3" class="founder-photo" onclick="openLightbox('trinav', 2)" alt="Trinav Talukdar 3">
+                    <img src="{founder_photos['trinav'][0]}" class="founder-photo" onclick="openLightbox('trinav', 0)" alt="Trinav Talukdar 1">
+                    <img src="{founder_photos['trinav'][1]}" class="founder-photo" onclick="openLightbox('trinav', 1)" alt="Trinav Talukdar 2">
+                    <img src="{founder_photos['trinav'][2]}" class="founder-photo" onclick="openLightbox('trinav', 2)" alt="Trinav Talukdar 3">
                 </div>
             </div>
         </div>
@@ -1470,6 +1576,14 @@ body {{
         <img class="lightbox-image" id="lightboxImage" src="" alt="">
         <button class="lightbox-nav lightbox-next" onclick="nextPhoto(event)">&#10095;</button>
         <div class="lightbox-counter" id="lightboxCounter"></div>
+    </div>
+
+    <div id="chewieOverlay" class="chewie-overlay" onclick="closeChewie()">
+        <div class="chewie-card">
+            <img id="chewieImg" class="chewie-photo" src="" alt="Chewie">
+            <div class="chewie-caption">🎉 CHEWIE APPROVES! 🎉</div>
+            <div class="chewie-hint">(tap anywhere to dismiss)</div>
+        </div>
     </div>
 
 </div>
@@ -2179,23 +2293,7 @@ function checkCrossword() {{
 
 /* ============= Lightbox for founder photos ============= */
 
-const lighboxPhotos = {{
-    maanal: [
-        "https://via.placeholder.com/180x200?text=Maanal+1",
-        "https://via.placeholder.com/180x200?text=Maanal+2",
-        "https://via.placeholder.com/180x200?text=Maanal+3"
-    ],
-    aman: [
-        "https://via.placeholder.com/180x200?text=Aman+1",
-        "https://via.placeholder.com/180x200?text=Aman+2",
-        "https://via.placeholder.com/180x200?text=Aman+3"
-    ],
-    trinav: [
-        "https://via.placeholder.com/180x200?text=Trinav+1",
-        "https://via.placeholder.com/180x200?text=Trinav+2",
-        "https://via.placeholder.com/180x200?text=Trinav+3"
-    ]
-}};
+const lighboxPhotos = {FOUNDER_PHOTOS_JSON};
 
 let currentLightboxMember = null;
 let currentLightboxIndex = 0;
@@ -2239,6 +2337,45 @@ function updateLightboxCounter() {{
 // Close lightbox on ESC key
 document.addEventListener("keydown", (e) => {{
     if (e.key === "Escape") closeLightbox();
+}});
+
+/* ============= Chewie easter egg ============= */
+
+const CHEWIE_URI = {CHEWIE_URI_JSON};
+
+function triggerChewiePopup() {{
+
+    if (!CHEWIE_URI) return;
+
+    const overlay = document.getElementById("chewieOverlay");
+    const img = document.getElementById("chewieImg");
+
+    // Restart the pop-in animation even if it already played once.
+    img.style.animation = "none";
+    img.offsetHeight;
+    img.style.animation = "";
+
+    img.src = CHEWIE_URI;
+    overlay.classList.add("show");
+
+    if (window.confetti) {{
+        confetti({{
+            particleCount: 140,
+            spread: 110,
+            origin: {{ y: 0.4 }},
+            colors: ["#d8b878", "#f0e4cf", "#6d8a5b", "#c4a04a"]
+        }});
+    }}
+
+}}
+
+function closeChewie() {{
+    document.getElementById("chewieOverlay").classList.remove("show");
+}}
+
+// Close chewie popup on ESC key
+document.addEventListener("keydown", (e) => {{
+    if (e.key === "Escape") closeChewie();
 }});
 
 /* ============= Puzzle III: The Melody (piano) ============= */
@@ -2463,6 +2600,8 @@ function handleNotePlay(note, freq, element) {{
                 }},
                 "*"
             );
+
+            triggerChewiePopup();
 
         }}
 
