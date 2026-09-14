@@ -491,9 +491,9 @@ We see that you have made it past the interview round.
 Congratulations, and welcome to the club.
 </div>
 <div class="intro-line delay-2">
-To fully enter, you must solve 3 puzzles, each of which
+To prove yourself truly worthy, you must solve 3 puzzles, each of which
 unlocks more knowledge about the club. At the very end,
-you will receive the link to join the group.
+you will receive the letter of acceptance!
 </div>
 <div class="intro-line delay-3">
 <span class="intro-warning">Do not cheat, and enjoy.</span>
