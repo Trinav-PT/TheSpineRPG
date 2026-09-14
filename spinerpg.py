@@ -2441,6 +2441,8 @@ const keyMap = {{}};
 
 let playedSequence = [];
 
+let pianoCompleted = false;
+
 let audioCtx = null;
 
 let activeOscillators = {{}};
@@ -2598,6 +2600,8 @@ function updatePlayedDisplay() {{
 
 function handleNotePlay(note, freq, element) {{
 
+    if (pianoCompleted) return;
+
     initAudio();
 
     flashKey(element);
@@ -2622,6 +2626,8 @@ function handleNotePlay(note, freq, element) {{
             playedSequence.length ===
             melody.length
         ) {{
+
+            pianoCompleted = true;
 
             document.getElementById("pianoFeedback").innerHTML =
 
