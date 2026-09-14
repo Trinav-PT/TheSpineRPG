@@ -1609,7 +1609,7 @@ body {{
     <div id="chewieOverlay" class="chewie-overlay" onclick="closeChewie()">
         <div class="chewie-card">
             <img id="chewieImg" class="chewie-photo" src="" alt="Chewie">
-            <div class="chewie-caption">🎉 CHEWIE APPROVES! 🎉</div>
+            <div class="chewie-caption">😈 CHEWIE APPROVES! 😈</div>
             <div class="chewie-hint">(tap anywhere to dismiss)</div>
         </div>
     </div>
