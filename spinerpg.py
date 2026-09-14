@@ -175,7 +175,7 @@ CROSSWORD_CLUES = {
         },
         {
             "num": 4,
-            "clue": "We brought this boarding school to Plaksha in one of our earlier events.",
+            "clue": "We brought this wizarding and witchcraft boarding school to Plaksha in one of our earlier events.",
             "length": 8,
             "row": 5,
             "col": 8
@@ -2741,7 +2741,7 @@ function generateLetter() {{
         document
             .getElementById("playerName")
             .value
-            .trim() || "Brave Bard";
+            .trim() || "Chewie";
 
     return `
 =======================================================
