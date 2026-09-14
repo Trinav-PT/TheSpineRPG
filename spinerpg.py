@@ -2473,47 +2473,53 @@ function playTone(freq, id) {{
 
     const now = audioCtx.currentTime;
 
-    const oscillator = audioCtx.createOscillator();
+    // Soft synthesized piano tone: a fundamental plus a quiet
+    // upper harmonic, shaped with a piano-like attack and decay.
+    const masterGain = audioCtx.createGain();
+    const filter = audioCtx.createBiquadFilter();
 
-    const gain = audioCtx.createGain();
+    filter.type = "lowpass";
+    filter.frequency.setValueAtTime(4200, now);
+    filter.Q.setValueAtTime(0.7, now);
 
-    oscillator.type = "triangle";
+    masterGain.gain.setValueAtTime(0.0001, now);
+    masterGain.gain.exponentialRampToValueAtTime(0.20, now + 0.008);
+    masterGain.gain.exponentialRampToValueAtTime(0.075, now + 0.16);
+    masterGain.gain.exponentialRampToValueAtTime(0.0001, now + 1.05);
 
-    oscillator.frequency.setValueAtTime(
-        freq,
-        now
-    );
+    const fundamental = audioCtx.createOscillator();
+    const harmonic = audioCtx.createOscillator();
 
-    gain.gain.setValueAtTime(
-        0.0001,
-        now
-    );
+    fundamental.type = "triangle";
+    harmonic.type = "sine";
 
-    gain.gain.exponentialRampToValueAtTime(
-        0.22,
-        now + 0.012
-    );
+    fundamental.frequency.setValueAtTime(freq, now);
+    harmonic.frequency.setValueAtTime(freq * 2, now);
 
-    gain.gain.exponentialRampToValueAtTime(
-        0.0001,
-        now + 0.75
-    );
+    const harmonicGain = audioCtx.createGain();
+    harmonicGain.gain.setValueAtTime(0.0001, now);
+    harmonicGain.gain.exponentialRampToValueAtTime(0.055, now + 0.006);
+    harmonicGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.55);
 
-    oscillator.connect(gain);
+    fundamental.connect(masterGain);
+    harmonic.connect(harmonicGain);
+    harmonicGain.connect(masterGain);
+    masterGain.connect(filter);
+    filter.connect(audioCtx.destination);
 
-    gain.connect(audioCtx.destination);
+    fundamental.start(now);
+    harmonic.start(now);
 
-    oscillator.start(now);
+    fundamental.stop(now + 1.1);
+    harmonic.stop(now + 0.65);
 
-    oscillator.stop(now + 0.8);
-
-    activeOscillators[id] = oscillator;
+    activeOscillators[id] = [fundamental, harmonic];
 
     setTimeout(() => {{
 
         delete activeOscillators[id];
 
-    }}, 850);
+    }}, 1150);
 
 }}
 
@@ -2808,6 +2814,18 @@ function buildPiano() {{
     document.addEventListener(
         "keydown",
         (event) => {{
+
+            // Do not capture keyboard input while the user is typing
+            // into the acceptance-letter name field.
+            const target = event.target;
+            if (
+                target &&
+                (target.tagName === "INPUT" ||
+                 target.tagName === "TEXTAREA" ||
+                 target.isContentEditable)
+            ) {{
+                return;
+            }}
 
             const key =
                 event.key.toLowerCase();
